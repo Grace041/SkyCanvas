@@ -1,2 +1,5 @@
 Buildings by ...
 [website]
+
+Ferris_wheel.obj: "Ferris Wheel | XYZDaily" (https://skfb.ly/6UWKx) by Hineline is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
+bridge.obj: "bridge" (https://skfb.ly/6wnEJ) by sho7noka is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
