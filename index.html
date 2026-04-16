@@ -1,9 +1,29 @@
 <html>
 <head>
     <title>Sky Canvas</title>
+    <style>
+        html, body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #dfe7ff;
+        }
+
+        .render-view {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
 </head>
 
 <body>
+<div class="render-view"></div>
 <script type="module" src="main.js"></script>
 </body>
 </html>
