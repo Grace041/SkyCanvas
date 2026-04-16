@@ -19,11 +19,58 @@
         canvas {
             display: block;
         }
+
+        .formation-controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            color: white;
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+        }
+
+        .control-label {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .formation-select {
+            padding: 8px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 8px;
+            background: rgba(7, 20, 47, 0.85);
+            color: white;
+            font-size: 14px;
+        }
+
+        .rotation-speed {
+            width: 140px;
+            accent-color: white;
+        }
     </style>
 </head>
 
 <body>
-<div class="render-view"></div>
+<div class="render-view">
+    <div class="formation-controls">
+        <label class="control-label">
+            Formation
+            <select id="formation-select" class="formation-select">
+                <option value="idle">Idle</option>
+                <option value="heart">Heart</option>
+            </select>
+        </label>
+        <label class="control-label">
+            Rotation Speed
+            <input id="rotation-speed" class="rotation-speed" type="range" min="0" max="2" step="0.1" value="0.5">
+        </label>
+    </div>
+</div>
 <script type="module" src="main.js"></script>
 </body>
 </html>

@@ -15,7 +15,6 @@ export function setScene() {
 
     renderer = new THREE.WebGLRenderer();
     renderer.setSize(renderView.clientWidth, renderView.clientHeight);
-    renderer.domElement.style.borderRadius = "15px";
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     scene.background = new THREE.Color("#07142f");
