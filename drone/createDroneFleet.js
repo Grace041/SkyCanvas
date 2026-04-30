@@ -1,10 +1,13 @@
 import * as THREE from "/build/three.module.js";
-import {getHeartPosition, getIdlePosition, getPlanetPosition} from "./dronePositions.js";
+import {getCustomShapePosition, getHeartPosition, getIdlePosition, getPlanetPosition} from "./dronePositions.js";
 
 export function createDroneFleet(scene, droneCount) {
     const droneRadius = 0.25;
+    const maxGlowLights = 24;
+    const heartDroneCount = droneCount;
     const droneGeometry = new THREE.SphereGeometry(droneRadius, 20, 20);
     const droneMaterial = new THREE.MeshBasicMaterial({color: new THREE.Color("#ffffff")});
+    const rotationAxis = new THREE.Vector3(0, 1, 0);
     const glowMaterial = new THREE.SpriteMaterial({
         map: createGlowTexture(),
         color: new THREE.Color("#ffffff"),
@@ -14,10 +17,14 @@ export function createDroneFleet(scene, droneCount) {
     });
     const drones = [];
     const baseTargets = [];
+    const rotatedTarget = new THREE.Vector3();
     const droneGroup = new THREE.Group();
     let currentFormation = "idle";
+    let formationRotation = 0;
     let rotationSpeed = 0;
     let selectedColor = new THREE.Color("#ffffff");
+    let customShapePoints = [];
+    let customShapeDroneCount = droneCount;
 
     scene.add(droneGroup);
 
@@ -32,11 +39,16 @@ export function createDroneFleet(scene, droneCount) {
         glow.position.copy(drone.position);
         glow.scale.set(1, 1, 1);
 
-        const glowLight = new THREE.PointLight(new THREE.Color("#ffffff"), 0.18, 1.8);
-        glowLight.position.copy(drone.position);
+        const glowLight = i < maxGlowLights ? new THREE.PointLight(new THREE.Color("#ffffff"), 0.18, 1.8) : null;
+
+        if (glowLight) {
+            glowLight.position.copy(drone.position);
+        }
 
         droneGroup.add(glow);
-        droneGroup.add(glowLight);
+        if (glowLight) {
+            droneGroup.add(glowLight);
+        }
         droneGroup.add(drone);
 
         drones.push({drone, glow, glowLight});
@@ -47,17 +59,17 @@ export function createDroneFleet(scene, droneCount) {
         setFormation(nextFormationName) {
             currentFormation = nextFormationName;
 
-            if (nextFormationName === "idle") {
-                droneGroup.rotation.y = 0;
-            }
+            formationRotation = 0;
 
             for (let i = 0; i < droneCount; i += 1) {
                 let target;
 
-                if (nextFormationName === "heart") {
-                    target = getHeartPosition(i, droneCount);
+                if (nextFormationName === "heart" && i < heartDroneCount) {
+                    target = getHeartPosition(i, heartDroneCount);
                 } else if (nextFormationName === "planet") {
                     target = getPlanetPosition(i, droneCount);
+                } else if (nextFormationName === "custom" && i < customShapeDroneCount) {
+                    target = getCustomShapePosition(i, customShapeDroneCount, customShapePoints);
                 } else {
                     target = getIdlePosition(i, droneCount);
                 }
@@ -66,6 +78,11 @@ export function createDroneFleet(scene, droneCount) {
             }
 
             updateDroneColors();
+        },
+        setCustomShape(shapePoints, shapeDroneCount = droneCount) {
+            customShapePoints = shapePoints.map((point) => ({x: point.x, y: point.y}));
+            customShapeDroneCount = THREE.MathUtils.clamp(Math.round(shapeDroneCount), 1, droneCount);
+            this.setFormation("custom");
         },
         setRotationSpeed(nextRotationSpeed) {
             rotationSpeed = nextRotationSpeed;
@@ -78,16 +95,19 @@ export function createDroneFleet(scene, droneCount) {
         update(delta) {
             const moveSpeed = Math.min(1, delta * 1.6);
 
-            if (currentFormation === "heart" || currentFormation === "planet") {
-                droneGroup.rotation.y += delta * rotationSpeed;
+            if (currentFormation === "heart" || currentFormation === "planet" || currentFormation === "custom") {
+                formationRotation += delta * rotationSpeed;
             }
 
             for (let i = 0; i < droneCount; i += 1) {
                 const currentDrone = drones[i];
+                const target = getAnimatedTarget(i);
 
-                currentDrone.drone.position.lerp(baseTargets[i], moveSpeed);
+                currentDrone.drone.position.lerp(target, moveSpeed);
                 currentDrone.glow.position.copy(currentDrone.drone.position);
-                currentDrone.glowLight.position.copy(currentDrone.drone.position);
+                if (currentDrone.glowLight) {
+                    currentDrone.glowLight.position.copy(currentDrone.drone.position);
+                }
             }
         }
     };
@@ -97,12 +117,34 @@ export function createDroneFleet(scene, droneCount) {
             setDroneColor(drones[i], selectedColor);
         }
     }
+
+    function getAnimatedTarget(i) {
+        if (!shouldRotateDrone(i)) {
+            return baseTargets[i];
+        }
+
+        return rotatedTarget.copy(baseTargets[i]).applyAxisAngle(rotationAxis, formationRotation);
+    }
+
+    function shouldRotateDrone(i) {
+        if (currentFormation === "heart") {
+            return i < heartDroneCount;
+        }
+
+        if (currentFormation === "custom") {
+            return i < customShapeDroneCount;
+        }
+
+        return currentFormation === "planet";
+    }
 }
 
 function setDroneColor(currentDrone, color) {
     currentDrone.drone.material.color.copy(color);
     currentDrone.glow.material.color.copy(color);
-    currentDrone.glowLight.color.copy(color);
+    if (currentDrone.glowLight) {
+        currentDrone.glowLight.color.copy(color);
+    }
 }
 
 function createGlowTexture() {

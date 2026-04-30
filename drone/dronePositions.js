@@ -42,6 +42,27 @@ export function getPlanetPosition(i, droneCount) {
     return getPlanetRingPosition(i - planetDroneCount, droneCount - planetDroneCount, centerY);
 }
 
+export function getCustomShapePosition(i, droneCount, shapePoints) {
+    if (!shapePoints || shapePoints.length < 2) {
+        return getIdlePosition(i, droneCount);
+    }
+
+    const depthBands = 3;
+    const band = i % depthBands;
+    const samplesPerBand = Math.ceil(droneCount / depthBands);
+    const pointOnPath = sampleShapePath(shapePoints, Math.floor(i / depthBands), samplesPerBand);
+    const centeredPoint = normalizeShapePoint(pointOnPath, shapePoints);
+    const shapeWidth = 18;
+    const shapeHeight = 14;
+    const centerY = 6;
+
+    return new THREE.Vector3(
+        centeredPoint.x * shapeWidth,
+        -centeredPoint.y * shapeHeight + centerY,
+        (band - 1) * 0.75
+    );
+}
+
 function getPlanetBodyPosition(i, planetDroneCount, centerY, planetRadius) {
     const goldenAngle = Math.PI * (3 - Math.sqrt(5));
     const y = 1 - (i / Math.max(1, planetDroneCount - 1)) * 2;
@@ -67,4 +88,66 @@ function getPlanetRingPosition(i, ringDroneCount, centerY) {
     const z = localZ * Math.cos(tilt);
 
     return new THREE.Vector3(localX, y + centerY, z);
+}
+
+function sampleShapePath(shapePoints, sampleIndex, sampleCount) {
+    const segmentLengths = [];
+    let totalLength = 0;
+
+    for (let i = 0; i < shapePoints.length; i += 1) {
+        const currentPoint = shapePoints[i];
+        const nextPoint = shapePoints[(i + 1) % shapePoints.length];
+        const segmentLength = Math.hypot(nextPoint.x - currentPoint.x, nextPoint.y - currentPoint.y);
+
+        segmentLengths.push(segmentLength);
+        totalLength += segmentLength;
+    }
+
+    if (totalLength === 0) {
+        return shapePoints[0];
+    }
+
+    let targetDistance = (sampleIndex / sampleCount) * totalLength;
+
+    for (let i = 0; i < shapePoints.length; i += 1) {
+        if (targetDistance <= segmentLengths[i]) {
+            const currentPoint = shapePoints[i];
+            const nextPoint = shapePoints[(i + 1) % shapePoints.length];
+            const progress = targetDistance / Math.max(segmentLengths[i], 0.0001);
+
+            return {
+                x: currentPoint.x + (nextPoint.x - currentPoint.x) * progress,
+                y: currentPoint.y + (nextPoint.y - currentPoint.y) * progress
+            };
+        }
+
+        targetDistance -= segmentLengths[i];
+    }
+
+    return shapePoints[shapePoints.length - 1];
+}
+
+function normalizeShapePoint(point, shapePoints) {
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
+
+    for (let i = 0; i < shapePoints.length; i += 1) {
+        minX = Math.min(minX, shapePoints[i].x);
+        maxX = Math.max(maxX, shapePoints[i].x);
+        minY = Math.min(minY, shapePoints[i].y);
+        maxY = Math.max(maxY, shapePoints[i].y);
+    }
+
+    const width = Math.max(maxX - minX, 0.0001);
+    const height = Math.max(maxY - minY, 0.0001);
+    const largestDimension = Math.max(width, height);
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+
+    return {
+        x: (point.x - centerX) / largestDimension,
+        y: (point.y - centerY) / largestDimension
+    };
 }
