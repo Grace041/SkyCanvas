@@ -42,6 +42,21 @@ export function getPlanetPosition(i, droneCount) {
     return getPlanetRingPosition(i - planetDroneCount, droneCount - planetDroneCount, centerY);
 }
 
+export function getStarPosition(i, droneCount) {
+    const faceLineDroneCount = Math.floor(droneCount * 0.78);
+    const centerY = 6;
+    const outerRadius = 8.6;
+    const innerRadius = 3.9;
+    const depth = 1;
+    const relief = 3.2;
+
+    if (i < faceLineDroneCount) {
+        return getStarFaceLinePosition(i, faceLineDroneCount, centerY, outerRadius, innerRadius, depth, relief);
+    }
+
+    return getStarDepthEdgePosition(i - faceLineDroneCount, droneCount - faceLineDroneCount, centerY, outerRadius, innerRadius, depth);
+}
+
 export function getCustomShapePosition(i, droneCount, shapePoints) {
     if (!shapePoints || shapePoints.length < 2) {
         return getIdlePosition(i, droneCount);
@@ -88,6 +103,106 @@ function getPlanetRingPosition(i, ringDroneCount, centerY) {
     const z = localZ * Math.cos(tilt);
 
     return new THREE.Vector3(localX, y + centerY, z);
+}
+
+function getStarFaceLinePosition(i, faceLineDroneCount, centerY, outerRadius, innerRadius, depth, relief) {
+    const face = i % 2;
+    const faceIndex = Math.floor(i / 2);
+    const dronesPerFace = Math.ceil(faceLineDroneCount / 2);
+    const outlineDroneCount = Math.floor(dronesPerFace * 0.48);
+    const faceDirection = face === 0 ? 1 : -1;
+    const outlineZ = faceDirection * depth / 2;
+    const peakZ = faceDirection * (depth / 2 + relief);
+
+    if (faceIndex < outlineDroneCount) {
+        const point = sampleStarPerimeter(faceIndex, outlineDroneCount, outerRadius, innerRadius);
+
+        return new THREE.Vector3(point.x, point.y + centerY, outlineZ);
+    }
+
+    return getStarSeamPosition(
+        faceIndex - outlineDroneCount,
+        dronesPerFace - outlineDroneCount,
+        centerY,
+        outerRadius,
+        innerRadius,
+        peakZ,
+        outlineZ
+    );
+}
+
+function getStarSeamPosition(i, seamDroneCount, centerY, outerRadius, innerRadius, peakZ, outlineZ) {
+    const vertices = getStarVertices(outerRadius, innerRadius);
+    const seamIndex = i % vertices.length;
+    const dronesPerSeam = Math.ceil(seamDroneCount / vertices.length);
+    const seamProgress = ((Math.floor(i / vertices.length) + 1) / (dronesPerSeam + 1));
+    const vertex = vertices[seamIndex];
+    const x = vertex.x * seamProgress;
+    const y = vertex.y * seamProgress;
+    const z = THREE.MathUtils.lerp(peakZ, outlineZ, seamProgress);
+
+    return new THREE.Vector3(x, y + centerY, z);
+}
+
+function getStarDepthEdgePosition(i, edgeDroneCount, centerY, outerRadius, innerRadius, depth) {
+    const vertices = getStarVertices(outerRadius, innerRadius);
+    const edgeIndex = i % vertices.length;
+    const dronesPerEdge = Math.ceil(edgeDroneCount / vertices.length);
+    const progress = ((Math.floor(i / vertices.length) + 1) / (dronesPerEdge + 1));
+    const vertex = vertices[edgeIndex];
+    const z = THREE.MathUtils.lerp(depth / 2, -depth / 2, progress);
+
+    return new THREE.Vector3(vertex.x, vertex.y + centerY, z);
+}
+
+function sampleStarPerimeter(sampleIndex, sampleCount, outerRadius, innerRadius) {
+    const vertices = getStarVertices(outerRadius, innerRadius);
+    const segmentLengths = [];
+    let totalLength = 0;
+
+    for (let i = 0; i < vertices.length; i += 1) {
+        const currentPoint = vertices[i];
+        const nextPoint = vertices[(i + 1) % vertices.length];
+        const segmentLength = Math.hypot(nextPoint.x - currentPoint.x, nextPoint.y - currentPoint.y);
+
+        segmentLengths.push(segmentLength);
+        totalLength += segmentLength;
+    }
+
+    let targetDistance = (sampleIndex / sampleCount) * totalLength;
+
+    for (let i = 0; i < vertices.length; i += 1) {
+        if (targetDistance <= segmentLengths[i]) {
+            const currentPoint = vertices[i];
+            const nextPoint = vertices[(i + 1) % vertices.length];
+            const progress = targetDistance / Math.max(segmentLengths[i], 0.0001);
+
+            return {
+                x: currentPoint.x + (nextPoint.x - currentPoint.x) * progress,
+                y: currentPoint.y + (nextPoint.y - currentPoint.y) * progress
+            };
+        }
+
+        targetDistance -= segmentLengths[i];
+    }
+
+    return vertices[vertices.length - 1];
+}
+
+function getStarVertices(outerRadius, innerRadius) {
+    const vertices = [];
+
+    for (let i = 0; i < 10; i += 1) {
+        const radius = i % 2 === 0 ? outerRadius : innerRadius;
+        const angle = -Math.PI / 2 + i * Math.PI / 5;
+
+        vertices.push({
+            x: Math.cos(angle) * radius,
+            y: Math.sin(angle) * radius
+        });
+    }
+
+    return vertices;
 }
 
 function sampleShapePath(shapePoints, sampleIndex, sampleCount) {

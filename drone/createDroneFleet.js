@@ -1,5 +1,5 @@
 import * as THREE from "/build/three.module.js";
-import {getCustomShapePosition, getHeartPosition, getIdlePosition, getPlanetPosition} from "./dronePositions.js";
+import {getCustomShapePosition, getHeartPosition, getIdlePosition, getPlanetPosition, getStarPosition} from "./dronePositions.js";
 
 export function createDroneFleet(scene, droneCount) {
     const droneRadius = 0.25;
@@ -66,6 +66,8 @@ export function createDroneFleet(scene, droneCount) {
 
                 if (nextFormationName === "heart" && i < heartDroneCount) {
                     target = getHeartPosition(i, heartDroneCount);
+                } else if (nextFormationName === "star") {
+                    target = getStarPosition(i, droneCount);
                 } else if (nextFormationName === "planet") {
                     target = getPlanetPosition(i, droneCount);
                 } else if (nextFormationName === "custom" && i < customShapeDroneCount) {
@@ -95,7 +97,7 @@ export function createDroneFleet(scene, droneCount) {
         update(delta) {
             const moveSpeed = Math.min(1, delta * 1.6);
 
-            if (currentFormation === "heart" || currentFormation === "planet" || currentFormation === "custom") {
+            if (currentFormation === "heart" || currentFormation === "star" || currentFormation === "planet" || currentFormation === "custom") {
                 formationRotation += delta * rotationSpeed;
             }
 
@@ -135,7 +137,7 @@ export function createDroneFleet(scene, droneCount) {
             return i < customShapeDroneCount;
         }
 
-        return currentFormation === "planet";
+        return currentFormation === "star" || currentFormation === "planet";
     }
 }
 
