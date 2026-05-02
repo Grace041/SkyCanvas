@@ -20,10 +20,8 @@
             display: block;
         }
 
-        .formation-controls {
+        .shape-controls {
             position: absolute;
-            top: 20px;
-            left: 20px;
             z-index: 1;
             display: flex;
             flex-direction: column;
@@ -40,38 +38,20 @@
             font-family: Arial, sans-serif;
         }
 
+        .shape-controls[hidden] {
+            display: none;
+        }
+
+        .shape-title {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
         .control-label {
             display: flex;
             flex-direction: column;
             gap: 4px;
-        }
-
-        .formation-select {
-            padding: 8px 12px;
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: 8px;
-            background: rgba(7, 20, 47, 0.85);
-            color: white;
-            font-size: 14px;
-        }
-
-        .rotation-speed {
-            width: 140px;
-            accent-color: white;
-        }
-
-        .shape-drone-count {
-            width: 100%;
-            accent-color: white;
-        }
-
-        .drone-color {
-            width: 140px;
-            height: 34px;
-            padding: 2px;
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: 8px;
-            background: rgba(7, 20, 47, 0.85);
         }
 
         .shape-builder {
@@ -89,6 +69,11 @@
             background: rgba(255, 255, 255, 0.08);
             cursor: crosshair;
             touch-action: none;
+        }
+
+        .shape-drone-count {
+            width: 100%;
+            accent-color: white;
         }
 
         .shape-actions {
@@ -111,39 +96,24 @@
             background: rgba(255, 255, 255, 0.2);
         }
 
+        .lil-gui {
+            border-radius: 15px;
+            padding: 10px;
+        }
+
     </style>
 </head>
 
 <body>
 <div class="render-view">
-    <div class="formation-controls">
-        <label class="control-label">
-            Formation
-            <select id="formation-select" class="formation-select">
-                <option value="idle">Idle</option>
-                <option value="heart">Heart</option>
-                <option value="star">Star</option>
-                <option value="planet">Planet</option>
-                <option value="custom">Custom Shape</option>
-            </select>
-        </label>
-        <label class="control-label">
-            Rotation Speed
-            <input id="rotation-speed" class="rotation-speed" type="range" min="0" max="2" step="0.1" value="0.5">
-        </label>
-        <label class="control-label">
-            Drone Colour
-            <input id="drone-color" class="drone-color" type="color" value="#ffffff">
-        </label>
+    <div id="shape-controls" class="shape-controls" hidden>
+        <h1 class="shape-title">Draw Custom Shape</h1>
         <div class="shape-builder">
             <label class="control-label">
-                Draw Custom Shape
                 <canvas id="shape-canvas" class="shape-canvas" width="440" height="320"></canvas>
             </label>
-            <label class="control-label">
-                Drones in Shape: <span id="shape-drone-count-value">160</span>
-                <input id="shape-drone-count" class="shape-drone-count" type="range" min="24" max="320" step="8" value="160">
-            </label>
+            <div>Drones in Shape: <span id="shape-drone-count-value">160</span></div>
+            <input id="shape-drone-count" class="shape-drone-count" type="range" min="24" max="320" step="8" value="160">
             <div class="shape-actions">
                 <button id="apply-shape" class="shape-button" type="button">Use Shape</button>
                 <button id="clear-shape" class="shape-button" type="button">Clear</button>

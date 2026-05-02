@@ -3,6 +3,7 @@ import * as THREE from "/build/three.module.js"
 export let scene;
 export let camera;
 export let renderer;
+const resizeCallbacks = [];
 
 export function setScene() {
     scene = new THREE.Scene();
@@ -54,5 +55,13 @@ function resizeRenderView() {
     camera.aspect = width/height;
     camera.updateProjectionMatrix();
     renderer.render(scene,camera);
+
+    for (const callback of resizeCallbacks) {
+        callback();
+    }
 }
 window.addEventListener("resize", resizeRenderView);
+
+export function onRenderViewResize(callback) {
+    resizeCallbacks.push(callback);
+}

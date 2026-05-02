@@ -17,8 +17,10 @@ export function createDroneFleet(scene, droneCount) {
     });
     const drones = [];
     const baseTargets = [];
+    const animationPositions = [];
     const rotatedTarget = new THREE.Vector3();
     const droneGroup = new THREE.Group();
+    
     let currentFormation = "idle";
     let formationRotation = 0;
     let rotationSpeed = 0;
@@ -53,6 +55,7 @@ export function createDroneFleet(scene, droneCount) {
 
         drones.push({drone, glow, glowLight});
         baseTargets.push(idlePosition.clone());
+        animationPositions.push(idlePosition.clone());
     }
 
     return {
@@ -103,9 +106,9 @@ export function createDroneFleet(scene, droneCount) {
 
             for (let i = 0; i < droneCount; i += 1) {
                 const currentDrone = drones[i];
-                const target = getAnimatedTarget(i);
+                const displayPosition = getDisplayPosition(i, moveSpeed);
 
-                currentDrone.drone.position.lerp(target, moveSpeed);
+                currentDrone.drone.position.copy(displayPosition);
                 currentDrone.glow.position.copy(currentDrone.drone.position);
                 if (currentDrone.glowLight) {
                     currentDrone.glowLight.position.copy(currentDrone.drone.position);
@@ -120,12 +123,14 @@ export function createDroneFleet(scene, droneCount) {
         }
     }
 
-    function getAnimatedTarget(i) {
+    function getDisplayPosition(i, moveSpeed) {
+        animationPositions[i].lerp(baseTargets[i], moveSpeed);
+
         if (!shouldRotateDrone(i)) {
-            return baseTargets[i];
+            return animationPositions[i];
         }
 
-        return rotatedTarget.copy(baseTargets[i]).applyAxisAngle(rotationAxis, formationRotation);
+        return rotatedTarget.copy(animationPositions[i]).applyAxisAngle(rotationAxis, formationRotation);
     }
 
     function shouldRotateDrone(i) {

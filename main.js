@@ -1,7 +1,8 @@
 import * as THREE from "/build/three.module.js";
 import { OrbitControls } from "/build/controls/OrbitControls.js";
+import { GUI } from "/build/gui/lil-gui.module.min.js";
 import { createDroneFleet } from "./drone/createDroneFleet.js";
-import { scene, camera, renderer, setScene, setSceneElements, setSceneLighting } from "/setup.js";
+import { scene, camera, renderer, setScene, setSceneElements, setSceneLighting, onRenderViewResize } from "/setup.js";
 
 setScene();
 setSceneElements();
@@ -13,48 +14,30 @@ const clock = new THREE.Clock();
 const totalDroneCount = 320;
 
 const droneFleet = createDroneFleet(scene, totalDroneCount);
-const formationSelect = document.querySelector("#formation-select");
-const rotationSpeedInput = document.querySelector("#rotation-speed");
-const droneColorInput = document.querySelector("#drone-color");
+const shapePanel = document.querySelector("#shape-controls");
 const shapeCanvas = document.querySelector("#shape-canvas");
-const shapeDroneCountInput = document.querySelector("#shape-drone-count");
 const shapeDroneCountValue = document.querySelector("#shape-drone-count-value");
+const shapeDroneCountInput = document.querySelector("#shape-drone-count");
 const applyShapeButton = document.querySelector("#apply-shape");
 const clearShapeButton = document.querySelector("#clear-shape");
 const shapeContext = shapeCanvas.getContext("2d");
 const shapePoints = [];
+
 let isDrawingShape = false;
+let shapeController;
+let drawShapeController;
 
-formationSelect.addEventListener("change", () => {
-    if (formationSelect.value === "custom" && shapePoints.length < 3) {
-        formationSelect.value = "idle";
-        droneFleet.setFormation("idle");
-        return;
+const guiSettings = {
+    shape: "idle",
+    rotationSpeed: 0.5,
+    droneColor: "#ffffff",
+    shapeDroneCount: 160,
+    drawCustomShape() {
+        showShapePanel();
     }
+};
 
-    if (formationSelect.value === "custom") {
-        droneFleet.setCustomShape(shapePoints, getShapeDroneCount());
-        return;
-    }
-
-    droneFleet.setFormation(formationSelect.value);
-});
-
-rotationSpeedInput.addEventListener("input", () => {
-    droneFleet.setRotationSpeed(Number(rotationSpeedInput.value));
-});
-
-droneColorInput.addEventListener("input", () => {
-    droneFleet.setColor(droneColorInput.value);
-});
-
-shapeDroneCountInput.addEventListener("input", () => {
-    shapeDroneCountValue.textContent = shapeDroneCountInput.value;
-
-    if (formationSelect.value === "custom" && shapePoints.length >= 3) {
-        droneFleet.setCustomShape(shapePoints, getShapeDroneCount());
-    }
-});
+setupGUI();
 
 shapeCanvas.addEventListener("pointerdown", (event) => {
     isDrawingShape = true;
@@ -79,27 +62,27 @@ shapeCanvas.addEventListener("pointercancel", () => {
     isDrawingShape = false;
 });
 
-applyShapeButton.addEventListener("click", () => {
-    if (shapePoints.length < 3) {
-        return;
-    }
+shapeDroneCountInput.addEventListener("input", () => {
+    guiSettings.shapeDroneCount = Number(shapeDroneCountInput.value);
+    shapeDroneCountValue.textContent = shapeDroneCountInput.value;
 
-    formationSelect.value = "custom";
-    droneFleet.setCustomShape(shapePoints, getShapeDroneCount());
+    if (guiSettings.shape === "custom" && shapePoints.length >= 3) {
+        droneFleet.setCustomShape(shapePoints, getShapeDroneCount());
+    }
+});
+
+applyShapeButton.addEventListener("click", () => {
+    applyCustomShape();
 });
 
 clearShapeButton.addEventListener("click", () => {
-    shapePoints.length = 0;
-    drawShapeCanvas();
-
-    if (formationSelect.value === "custom") {
-        formationSelect.value = "idle";
-        droneFleet.setFormation("idle");
-    }
+    clearCustomShape();
 });
 
-droneFleet.setRotationSpeed(Number(rotationSpeedInput.value));
-droneFleet.setColor(droneColorInput.value);
+droneFleet.setRotationSpeed(guiSettings.rotationSpeed);
+droneFleet.setColor(guiSettings.droneColor);
+shapeDroneCountValue.textContent = guiSettings.shapeDroneCount;
+shapeDroneCountInput.value = guiSettings.shapeDroneCount;
 drawShapeCanvas();
 
 function updateScene() {
@@ -111,6 +94,84 @@ function updateScene() {
 }
 
 renderer.setAnimationLoop(updateScene);
+
+function setupGUI() {
+    const gui = new GUI({title: "Sky Canvas"});
+
+    shapeController = gui.add(guiSettings, "shape", {
+        Idle: "idle",
+        Heart: "heart",
+        Star: "star",
+        Planet: "planet",
+        Custom: "custom"
+    }).name("Shape");
+
+    shapeController.onChange((shape) => {
+        updateCustomShapeControls();
+
+        if (shape === "custom" && shapePoints.length >= 3) {
+            droneFleet.setCustomShape(shapePoints, getShapeDroneCount());
+            return;
+        }
+
+        if (shape === "custom") {
+            droneFleet.setFormation("idle");
+            return;
+        }
+
+        droneFleet.setFormation(shape);
+    });
+
+    gui.add(guiSettings, "rotationSpeed", 0, 2, 0.1)
+        .name("Rotation Speed")
+        .onChange((rotationSpeed) => {
+            droneFleet.setRotationSpeed(rotationSpeed);
+        });
+
+    gui.addColor(guiSettings, "droneColor")
+        .name("Drone Colour")
+        .onChange((droneColor) => {
+            droneFleet.setColor(droneColor);
+        });
+
+    drawShapeController = gui.add(guiSettings, "drawCustomShape")
+        .name("Draw Custom Shape");
+
+    repositionGUI();
+    updateCustomShapeControls();
+    onRenderViewResize(repositionGUI);
+}
+
+function repositionGUI() {
+    const guiDom = document.getElementsByClassName("lil-gui")[0];
+    const renderView = document.getElementsByClassName("render-view")[0];
+    const rect = renderView.getBoundingClientRect();
+
+    guiDom.style.right = `${rect.left + 20}px`;
+    guiDom.style.top = `${rect.top + 20}px`;
+    shapePanel.style.right = `${rect.left + 20}px`;
+    shapePanel.style.top = `${rect.top + guiDom.offsetHeight + 28}px`;
+}
+
+function updateCustomShapeControls() {
+    const isCustomShape = guiSettings.shape === "custom";
+
+    drawShapeController.show(isCustomShape);
+
+    if (!isCustomShape) {
+        hideShapePanel();
+    }
+}
+
+function showShapePanel() {
+    shapePanel.hidden = false;
+    drawShapeCanvas();
+    repositionGUI();
+}
+
+function hideShapePanel() {
+    shapePanel.hidden = true;
+}
 
 function addShapePoint(event) {
     const canvasBounds = shapeCanvas.getBoundingClientRect();
@@ -131,7 +192,27 @@ function addShapePoint(event) {
 }
 
 function getShapeDroneCount() {
-    return Number(shapeDroneCountInput.value);
+    return Number(guiSettings.shapeDroneCount);
+}
+
+function applyCustomShape() {
+    if (shapePoints.length < 3) {
+        return;
+    }
+
+    guiSettings.shape = "custom";
+    shapeController.updateDisplay();
+    updateCustomShapeControls();
+    droneFleet.setCustomShape(shapePoints, getShapeDroneCount());
+}
+
+function clearCustomShape() {
+    shapePoints.length = 0;
+    drawShapeCanvas();
+
+    if (guiSettings.shape === "custom") {
+        droneFleet.setFormation("idle");
+    }
 }
 
 function drawShapeCanvas() {
