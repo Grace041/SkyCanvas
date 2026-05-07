@@ -19,11 +19,170 @@
         canvas {
             display: block;
         }
+
+        .music-panel {
+            position: fixed;
+            left: 18px;
+            bottom: 18px;
+            z-index: 10;
+            display: grid;
+            gap: 10px;
+            width: min(320px, calc(100vw - 36px));
+            padding: 14px;
+            color: #f7fbff;
+            background: rgba(10, 16, 28, 0.72);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            box-shadow: 0 14px 40px rgba(0, 0, 0, 0.28);
+            backdrop-filter: blur(14px);
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .music-panel_top {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .music-panel_button {
+            width: 72px;
+            height: 40px;
+            flex: 0 0 auto;
+            color: #0f172a;
+            background: #f7fbff;
+            border: 0;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .music-panel_button:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .music-panel_track {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 14px;
+        }
+
+        .music-panel_file {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+        }
+
+        .music-panel_file-label {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 34px;
+            padding: 0 12px;
+            color: #f7fbff;
+            border: 1px solid rgba(255, 255, 255, 0.34);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .music-panel_actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .music-panel_save,
+        .music-panel_clear {
+            min-height: 34px;
+            color: #f7fbff;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .music-panel_save:disabled,
+        .music-panel_clear:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .music-panel_saved-title {
+            min-height: 16px;
+            color: rgba(247, 251, 255, 0.78);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .music-panel_saved {
+            display: grid;
+            gap: 6px;
+            max-height: 130px;
+            overflow-y: auto;
+        }
+
+        .music-panel_saved-button {
+            min-width: 0;
+            min-height: 32px;
+            padding: 0 10px;
+            overflow: hidden;
+            color: #f7fbff;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            text-align: left;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .music-panel_saved-button:hover {
+            background: rgba(255, 255, 255, 0.16);
+        }
+
+        .music-panel_volume {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .music-panel_volume input {
+            width: 100%;
+        }
     </style>
 </head>
 
 <body>
 <div class="render-view"></div>
+<section class="music-panel" aria-label="Music controls">
+    <div class="music-panel_top">
+        <button class="music-panel_button" type="button" disabled aria-label="Play music">Play</button>
+        <div class="music-panel_track">No music selected</div>
+    </div>
+    <input class="music-panel_file" id="music-file" type="file" accept="audio/*">
+    <label class="music-panel_file-label" for="music-file">Add music</label>
+    <div class="music-panel_actions">
+        <button class="music-panel_save" type="button" disabled>Save music</button>
+        <button class="music-panel_clear" type="button" disabled>Clear saved</button>
+    </div>
+    <div class="music-panel_saved-title">Saved music</div>
+    <div class="music-panel_saved" aria-label="Saved music"></div>
+    <label class="music-panel_volume">
+        <span>Volume</span>
+        <input class="music-panel_volume-slider" type="range" min="0" max="1" value="0.65" step="0.01">
+    </label>
+</section>
 <script type="module" src="main.js"></script>
 </body>
 </html>

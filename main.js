@@ -1,10 +1,12 @@
 import * as THREE from "/build/three.module.js";
 import { OrbitControls } from "/build/controls/OrbitControls.js";
 import { scene, camera, renderer, setScene, setSceneElements, setSceneLighting } from "/setup.js";
+import { setupMusicControls } from "/music/musicUI.js";
 
 setScene();
 setSceneElements();
 setSceneLighting();
+setupMusicControls();
 
 const controls = new OrbitControls(camera, renderer.domElement);
 
