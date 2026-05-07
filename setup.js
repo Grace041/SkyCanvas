@@ -3,6 +3,7 @@ import * as THREE from "/build/three.module.js"
 export let scene;
 export let camera;
 export let renderer;
+const resizeCallbacks = [];
 
 export function setScene() {
     scene = new THREE.Scene();
@@ -15,10 +16,9 @@ export function setScene() {
 
     renderer = new THREE.WebGLRenderer();
     renderer.setSize(renderView.clientWidth, renderView.clientHeight);
-    renderer.domElement.style.borderRadius = "15px";
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    scene.background = new THREE.Color("#000000");
+    scene.background = new THREE.Color("#07142f");
     document.querySelector(".render-view").appendChild(renderer.domElement);
 }
 
@@ -55,5 +55,13 @@ function resizeRenderView() {
     camera.aspect = width/height;
     camera.updateProjectionMatrix();
     renderer.render(scene,camera);
+
+    for (const callback of resizeCallbacks) {
+        callback();
+    }
 }
 window.addEventListener("resize", resizeRenderView);
+
+export function onRenderViewResize(callback) {
+    resizeCallbacks.push(callback);
+}
