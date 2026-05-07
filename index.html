@@ -2,28 +2,101 @@
 <head>
     <title>Sky Canvas</title>
     <style>
-        html, body {
+        html, body{
             margin: 0;
             width: 100%;
             height: 100%;
             overflow: hidden;
             background: #dfe7ff;
         }
-
-        .render-view {
+        .render-view{
             width: 100vw;
             height: 100vh;
             position: relative;
         }
-
-        canvas {
+        canvas{
             display: block;
+        }
+        #edit-panel{
+            position: absolute;
+            left: 15px;
+            top: 15px;
+            width: 200px;
+            background: rgba(20, 20, 20, 0.85);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            z-index: 10;
+            font-family: Arial, sans-serif;
+        }
+        #edit-panel h3{
+            margin-top: 0;
+            font-size: 16px;
+            text-align: center;
+        }
+        #edit-panel p{
+            margin: 8px 0 4px;
+            font-size: 14px;
+        }
+        #edit-panel button{
+            width: 100%;
+            margin: 4px 0;
+            padding: 6px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            background: #eeeeee;
+            color: black;
+        }
+        #edit-panel button:hover{
+            background: #cfcfcf;
+        }
+        #edit-panel hr{
+            border: none;
+            border-top: 1px solid #555555;
+            margin: 10px 0;
+        }
+        #model-info{
+            font-size: 13px;
+            color: #dddddd;
+            text-align: center;
+        }
+        .hint{
+            font-size: 12px;
+            color: #bbbbbb;
+            text-align: center;
+            line-height: 1.3;
         }
     </style>
 </head>
-
 <body>
-<div class="render-view"></div>
+<div class="render-view">
+    <div id="edit-panel">
+        <h3>Background Builder</h3>
+        <p class="hint">Use the buttons to build your own background scene.</p>
+        <p id="model-info">Selected Model: None</p>
+        <button id="addModel">Add Model</button>
+        <button id="prevModel">Previous Model</button>
+        <button id="nextModel">Next Model</button>
+        <button id="deleteModel">Delete Selected Model</button>
+        <hr>
+        <p>Move Model</p>
+        <button id="moveForward">Forward</button>
+        <button id="moveBack">Back</button>
+        <button id="moveLeft">Left</button>
+        <button id="moveRight">Right</button>
+        <button id="moveUp">Up</button>
+        <button id="moveDown">Down</button>
+        <hr>
+        <p>Size and Rotation</p>
+        <button id="scaleUp">Bigger</button>
+        <button id="scaleDown">Smaller</button>
+        <button id="rotateLeft">Rotate Left</button>
+        <button id="rotateRight">Rotate Right</button>
+        <hr>
+        <button id="resetModel">Reset Selected Model</button>
+    </div>
+</div>
 <script type="module" src="main.js"></script>
 </body>
 </html>
