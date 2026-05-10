@@ -1,67 +1,106 @@
 import * as THREE from "./build/three.module.js";
 import{ OBJLoader } from "./build/loaders/OBJLoader.js";
 import{ MTLLoader } from "./build/loaders/MTLLoader.js";
+import{ GLTFLoader } from "./build/loaders/GLTFLoader.js";
 export let scene;
 export let camera;
 export let renderer;
-let modelTemplate = null;
+let cityModelTemplate = null;
 let backgroundModels = [];
 let selectedModelIndex = -1;
+const floorY = -30;
+const defaultCityTransform ={x: 0, y: -10, z: -40, scale: 1, rotation: 0};
+const defaultFerrisWheelTransform ={x: 900, y: 35, z: -500, scale: 25, rotation: 0};
+const defaultOperaHouseTransform ={x: -900, y: -10, z: -500, scale: 100, rotation: 0};
 export function setScene(){
     scene = new THREE.Scene();
     const renderView = document.querySelector(".render-view");
     const aspectRatio = renderView.clientWidth / renderView.clientHeight;
     camera = new THREE.PerspectiveCamera(75, aspectRatio, 0.1, 10000);
-    camera.position.set(0, 1000, 120);
-    camera.lookAt(0, 15, -40);
+    camera.position.set(900, 300, 900);
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(renderView.clientWidth, renderView.clientHeight);
     renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 0.6;
+    renderer.toneMappingExposure = 1.0;
     scene.background = new THREE.Color("#000000");
     renderView.appendChild(renderer.domElement);
 }
-export function setSceneElements(){ //I plan to add flooring and other elements at a later stage
+export function setSceneElements(){
+    const floorGeometry = new THREE.PlaneGeometry(20000, 20000);
+    const floorMaterial = new THREE.MeshBasicMaterial({
+        color: 0x07192b
+    });
+    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.set(0, floorY, 0);
+    scene.add(floor);
 }
 export function setSceneLighting(){
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.35);
+    const ambientLight = new THREE.AmbientLight(0x8899aa, 0.65);
     scene.add(ambientLight);
-    const hemisphereLight = new THREE.HemisphereLight(0x8899aa, 0x111111, 0.35);
+    const hemisphereLight = new THREE.HemisphereLight(0x6688bb, 0x111111, 0.45);
     scene.add(hemisphereLight);
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.45);
-    directionalLight.position.set(20, 30, 20);
-    scene.add(directionalLight);
+    const moonLight = new THREE.DirectionalLight(0xffffff, 0.65);
+    moonLight.position.set(300, 600, 400);
+    scene.add(moonLight);
 }
 function applyNightLook(material){
     if(material.map){
         material.map.encoding = THREE.sRGBEncoding;
     }
-    if(material.emissiveMap){
-        material.emissive = new THREE.Color(0xffffff);
-        material.emissiveIntensity = 2.5;
+    const materialName = material.name ? material.name.toLowerCase() : "";
+    if(materialName.includes("edifs_cristal")){
+        const textureLoader = new THREE.TextureLoader();
+        textureLoader.setPath("./models/buildings/cityNight/");
+        const windowLightMap = textureLoader.load("Luces color_Edifs_Cristal.png");
+        windowLightMap.encoding = THREE.sRGBEncoding;
+        material.emissive = new THREE.Color(0xffffcc);
+        material.emissiveMap = windowLightMap;
+        material.emissiveIntensity = 0.75;
     }
-    if(material.emissive && !material.emissiveMap){
-        material.emissiveIntensity = 1.5;
+    if(material.shininess !== undefined){
+        material.shininess = 40;
     }
-    if(material.metalness !== undefined){
-        material.metalness = 0.1;
-    }
-    if(material.roughness !== undefined){
-        material.roughness = 0.8;
+    if(material.specular){
+        material.specular = new THREE.Color(0x333333);
     }
     material.needsUpdate = true;
 }
-function prepareModelMaterial(object){
+function prepareCityMaterial(object){
     object.traverse(function (child){
         if(child.isMesh && child.material){
             if(Array.isArray(child.material)){
-                child.material.forEach(applyNightLook);
+                child.material.forEach(function (mat){
+                    applyNightLook(mat);
+                });
             }else{
                 applyNightLook(child.material);
             }
         }
     });
+}
+function fixGLBMaterial(object){
+    object.traverse(function (child){
+        if(child.isMesh && child.material){
+            if(Array.isArray(child.material)){
+                child.material.forEach(function (mat){
+                    if(mat.map){
+                        mat.map.encoding = THREE.sRGBEncoding;
+                    }
+                    mat.needsUpdate = true;
+                });
+            }else{
+                if(child.material.map){
+                    child.material.map.encoding = THREE.sRGBEncoding;
+                }
+                child.material.needsUpdate = true;
+            }
+        }
+    });
+}
+function saveStartTransform(model, transform){
+    model.userData.defaultTransform ={x: transform.x, y: transform.y, z: transform.z, scale: transform.scale, rotation: transform.rotation};
 }
 function chooseModel(index){
     if(backgroundModels.length === 0){
@@ -83,26 +122,74 @@ export function getModelInfo(){
     if(selectedModelIndex === -1){
         return "None";
     }
-    return(selectedModelIndex + 1) + " / " + backgroundModels.length;
+    const model = backgroundModels[selectedModelIndex];
+    const modelName = model.userData.modelName || "Model";
+    return modelName + " " + (selectedModelIndex + 1) + " / " + backgroundModels.length;
 }
+
 export function getSelectedModel(){
     if(selectedModelIndex === -1){
         return null;
     }
     return backgroundModels[selectedModelIndex];
 }
+export function getSelectedModelTransform(){
+    const model = getSelectedModel();
+    if(model === null){
+        return{x: defaultCityTransform.x, y: defaultCityTransform.y, z: defaultCityTransform.z, scale: defaultCityTransform.scale, rotation: defaultCityTransform.rotation};
+    }
+    return{x: Math.round(model.position.x), y: Math.round(model.position.y), z: Math.round(model.position.z), scale: Number(model.scale.x.toFixed(1)), rotation: Math.round(THREE.MathUtils.radToDeg(model.rotation.y))};
+}
 export function addBackgroundModel(scale = 1, x = 0, y = -10, z = -40, rotationY = 0){
-    if(modelTemplate === null){
-        console.log("Model is still loading.");
+    if(cityModelTemplate === null){
+        console.log("City model is still loading.");
         return;
     }
-    const newModel = modelTemplate.clone(true);
+    const newModel = cityModelTemplate.clone(true);
     newModel.scale.set(scale, scale, scale);
     newModel.position.set(x, y, z);
-    newModel.rotation.y = rotationY;
+    newModel.rotation.y = THREE.MathUtils.degToRad(rotationY);
+    newModel.userData.modelName = "City";
+    saveStartTransform(newModel,{x: x, y: y, z: z, scale: scale, rotation: rotationY});
     scene.add(newModel);
     backgroundModels.push(newModel);
     selectedModelIndex = backgroundModels.length - 1;
+}
+export function addFerrisWheel(onLoaded){
+    const gltfLoader = new GLTFLoader();
+    gltfLoader.load("./models/buildings/ferriswheel.glb", function (gltf){
+        const ferrisWheel = gltf.scene;
+        fixGLBMaterial(ferrisWheel);
+        ferrisWheel.position.set(defaultFerrisWheelTransform.x, defaultFerrisWheelTransform.y, defaultFerrisWheelTransform.z);
+        ferrisWheel.scale.set(defaultFerrisWheelTransform.scale, defaultFerrisWheelTransform.scale, defaultFerrisWheelTransform.scale);
+        ferrisWheel.rotation.y = THREE.MathUtils.degToRad(defaultFerrisWheelTransform.rotation);
+        ferrisWheel.userData.modelName = "Ferris Wheel";
+        saveStartTransform(ferrisWheel, {x: ferrisWheel.position.x, y: ferrisWheel.position.y, z: ferrisWheel.position.z, scale: defaultFerrisWheelTransform.scale, rotation: defaultFerrisWheelTransform.rotation});
+        scene.add(ferrisWheel);
+        backgroundModels.push(ferrisWheel);
+        selectedModelIndex = backgroundModels.length - 1;
+        if(onLoaded){
+            onLoaded();
+        }
+    });
+}
+export function addOperaHouse(onLoaded){
+    const gltfLoader = new GLTFLoader();
+    gltfLoader.load("./models/buildings/sydney_opera_house.glb", function (gltf){
+        const operaHouse = gltf.scene;
+        fixGLBMaterial(operaHouse);
+        operaHouse.position.set(defaultOperaHouseTransform.x, defaultOperaHouseTransform.y, defaultOperaHouseTransform.z);
+        operaHouse.scale.set(defaultOperaHouseTransform.scale, defaultOperaHouseTransform.scale, defaultOperaHouseTransform.scale);
+        operaHouse.rotation.y = THREE.MathUtils.degToRad(defaultOperaHouseTransform.rotation);
+        operaHouse.userData.modelName = "Opera House";
+        saveStartTransform(operaHouse, defaultOperaHouseTransform);
+        scene.add(operaHouse);
+        backgroundModels.push(operaHouse);
+        selectedModelIndex = backgroundModels.length - 1;
+        if(onLoaded){
+            onLoaded();
+        }
+    });
 }
 export function chooseNextModel(){
     chooseModel(selectedModelIndex + 1);
@@ -110,33 +197,40 @@ export function chooseNextModel(){
 export function chooseLastModel(){
     chooseModel(selectedModelIndex - 1);
 }
-export function moveSelectedModel(x, y, z){
+export function setModelX(value){
     const model = getSelectedModel();
     if(model === null){
         return;
     }
-    model.position.x += x;
-    model.position.y += y;
-    model.position.z += z;
+    model.position.x = value;
 }
-export function makeModelBigger(amount){
+export function setModelY(value){
     const model = getSelectedModel();
     if(model === null){
         return;
     }
-    const newScale = model.scale.x + amount;
-    if(newScale < 0.1){
-        return;
-    }
-    model.scale.set(newScale, newScale, newScale);
+    model.position.y = value;
 }
-
-export function turnModel(amount){
+export function setModelZ(value){
     const model = getSelectedModel();
     if(model === null){
         return;
     }
-    model.rotation.y += amount;
+    model.position.z = value;
+}
+export function setModelScale(value){
+    const model = getSelectedModel();
+    if(model === null){
+        return;
+    }
+    model.scale.set(value, value, value);
+}
+export function setModelRotation(value){
+    const model = getSelectedModel();
+    if(model === null){
+        return;
+    }
+    model.rotation.y = THREE.MathUtils.degToRad(value);
 }
 export function deleteSelectedModel(){
     const model = getSelectedModel();
@@ -156,9 +250,16 @@ export function resetSelectedModel(){
     if(model === null){
         return;
     }
-    model.position.set(0, -10, -40);
-    model.scale.set(1, 1, 1);
-    model.rotation.set(0, 0, 0);
+    const defaultTransform = model.userData.defaultTransform;
+    if(defaultTransform){
+        model.position.set(defaultTransform.x, defaultTransform.y, defaultTransform.z);
+        model.scale.set(defaultTransform.scale, defaultTransform.scale, defaultTransform.scale);
+        model.rotation.set(0, THREE.MathUtils.degToRad(defaultTransform.rotation), 0);
+    }else{
+        model.position.set(0, -10, -40);
+        model.scale.set(1, 1, 1);
+        model.rotation.set(0, 0, 0);
+    }
 }
 export function loadBackgroundModels(onLoaded){
     const mtlLoader = new MTLLoader();
@@ -171,9 +272,8 @@ export function loadBackgroundModels(onLoaded){
         objLoader.setMaterials(materials);
         objLoader.setPath("./models/buildings/cityNight/");
         objLoader.load("gg.obj", function (object){
-            prepareModelMaterial(object);
-            modelTemplate = object;
-            addBackgroundModel(1, 0, -10, -40, 0);
+            prepareCityMaterial(object);
+            cityModelTemplate = object;
             if(onLoaded){
                 onLoaded();
             }
@@ -181,8 +281,12 @@ export function loadBackgroundModels(onLoaded){
     });
 }
 function resizeRenderView(){
-    const width = document.querySelector(".render-view").clientWidth;
-    const height = document.querySelector(".render-view").clientHeight;
+    if(!renderer || !camera){
+        return;
+    }
+    const renderView = document.querySelector(".render-view");
+    const width = renderView.clientWidth;
+    const height = renderView.clientHeight;
     renderer.setSize(width, height);
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
