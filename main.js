@@ -1,10 +1,11 @@
 import * as THREE from "./build/three.module.js";
-import {scene, camera, renderer, setScene, setSceneElements, setSceneLighting, loadBackgroundModels, addBackgroundModel, getModelCount, getModelInfo, chooseNextModel, chooseLastModel, moveSelectedModel, makeModelBigger, turnModel, deleteSelectedModel, resetSelectedModel} from "./setup.js";
+import { createBackgroundPanel } from "./backgroundUI/backgroundPanel.js";
+import {scene, camera, renderer, setScene, setSceneElements, setSceneLighting, loadBackgroundModels, addBackgroundModel, addFerrisWheel, addOperaHouse, getModelCount, getModelInfo, getSelectedModelTransform, chooseNextModel, chooseLastModel, setModelX, setModelY, setModelZ,setModelScale, setModelRotation, deleteSelectedModel, resetSelectedModel} from "./setup.js";
+createBackgroundPanel();
 setScene();
 setSceneElements();
 setSceneLighting();
-camera.position.set(900, 300, 900);
-const startTarget = new THREE.Vector3(-1500, 0, -20);
+const startTarget = new THREE.Vector3(-1500, 650, -20);
 const startDirection = new THREE.Vector3();
 startDirection.subVectors(startTarget, camera.position).normalize();
 let yaw = Math.atan2(-startDirection.x, -startDirection.z);
@@ -18,9 +19,6 @@ let isMouseDown = false;
 let lastMouseX = 0;
 let lastMouseY = 0;
 const mouseSpeed = 0.003;
-const moveStep = 20;
-const scaleStep = 0.1;
-const turnStep = 0.1;
 renderer.domElement.addEventListener("mousedown", function (event){
     if(event.button === 0){
         isMouseDown = true;
@@ -46,6 +44,7 @@ window.addEventListener("mousemove", function (event){
     if(pitch > maxPitch){
         pitch = maxPitch;
     }
+
     if(pitch < minPitch){
         pitch = minPitch;
     }
@@ -55,61 +54,92 @@ function updateModelInfo(){
     const modelInfo = document.querySelector("#model-info");
     modelInfo.textContent = "Selected Model: " + getModelInfo();
 }
-loadBackgroundModels(updateModelInfo);
-function setupEditorButtons(){
+function updateSliderValues(){
+    const transform = getSelectedModelTransform();
+    document.querySelector("#xSlider").value = transform.x;
+    document.querySelector("#ySlider").value = transform.y;
+    document.querySelector("#zSlider").value = transform.z;
+    document.querySelector("#scaleSlider").value = transform.scale;
+    document.querySelector("#rotationSlider").value = transform.rotation;
+    document.querySelector("#xValue").textContent = transform.x;
+    document.querySelector("#yValue").textContent = transform.y;
+    document.querySelector("#zValue").textContent = transform.z;
+    document.querySelector("#scaleValue").textContent = transform.scale.toFixed(1);
+    document.querySelector("#rotationValue").textContent = transform.rotation + "°";
+}
+function updateAllUI(){
+    updateModelInfo();
+    updateSliderValues();
+}
+loadBackgroundModels(updateAllUI);
+function setupButtons(){
     document.querySelector("#addModel").addEventListener("click", function (){
         const offset = getModelCount() * 80;
         addBackgroundModel(1, offset, -10, -40, 0);
-        updateModelInfo();
+        updateAllUI();
+    });
+    document.querySelector("#addFerrisWheel").addEventListener("click", function (){
+        addFerrisWheel(updateAllUI);
+    });
+    document.querySelector("#addOperaHouse").addEventListener("click", function (){
+        addOperaHouse(updateAllUI);
     });
     document.querySelector("#prevModel").addEventListener("click", function (){
         chooseLastModel();
-        updateModelInfo();
+        updateAllUI();
     });
     document.querySelector("#nextModel").addEventListener("click", function (){
         chooseNextModel();
-        updateModelInfo();
+        updateAllUI();
     });
     document.querySelector("#deleteModel").addEventListener("click", function (){
         deleteSelectedModel();
-        updateModelInfo();
-    });
-    document.querySelector("#moveForward").addEventListener("click", function (){
-        moveSelectedModel(0, 0, -moveStep);
-    });
-    document.querySelector("#moveBack").addEventListener("click", function (){
-        moveSelectedModel(0, 0, moveStep);
-    });
-    document.querySelector("#moveLeft").addEventListener("click", function (){
-        moveSelectedModel(-moveStep, 0, 0);
-    });
-    document.querySelector("#moveRight").addEventListener("click", function (){
-        moveSelectedModel(moveStep, 0, 0);
-    });
-    document.querySelector("#moveUp").addEventListener("click", function (){
-        moveSelectedModel(0, moveStep, 0);
-    });
-    document.querySelector("#moveDown").addEventListener("click", function (){
-        moveSelectedModel(0, -moveStep, 0);
-    });
-    document.querySelector("#scaleUp").addEventListener("click", function (){
-        makeModelBigger(scaleStep);
-    });
-    document.querySelector("#scaleDown").addEventListener("click", function (){
-        makeModelBigger(-scaleStep);
-    });
-    document.querySelector("#rotateLeft").addEventListener("click", function (){
-        turnModel(turnStep);
-    });
-    document.querySelector("#rotateRight").addEventListener("click", function (){
-        turnModel(-turnStep);
+        updateAllUI();
     });
     document.querySelector("#resetModel").addEventListener("click", function (){
         resetSelectedModel();
-        updateModelInfo();
+        updateAllUI();
     });
 }
-setupEditorButtons();
+function setupSliders(){
+    const xSlider = document.querySelector("#xSlider");
+    const ySlider = document.querySelector("#ySlider");
+    const zSlider = document.querySelector("#zSlider");
+    const scaleSlider = document.querySelector("#scaleSlider");
+    const rotationSlider = document.querySelector("#rotationSlider");
+    const xValue = document.querySelector("#xValue");
+    const yValue = document.querySelector("#yValue");
+    const zValue = document.querySelector("#zValue");
+    const scaleValue = document.querySelector("#scaleValue");
+    const rotationValue = document.querySelector("#rotationValue");
+    xSlider.addEventListener("input", function(){
+        const value = Number(xSlider.value);
+        setModelX(value);
+        xValue.textContent = value;
+    });
+    ySlider.addEventListener("input", function(){
+        const value = Number(ySlider.value);
+        setModelY(value);
+        yValue.textContent = value;
+    });
+    zSlider.addEventListener("input", function(){
+        const value = Number(zSlider.value);
+        setModelZ(value);
+        zValue.textContent = value;
+    });
+    scaleSlider.addEventListener("input", function(){
+        const value = Number(scaleSlider.value);
+        setModelScale(value);
+        scaleValue.textContent = value.toFixed(1);
+    });
+    rotationSlider.addEventListener("input", function(){
+        const value = Number(rotationSlider.value);
+        setModelRotation(value);
+        rotationValue.textContent = value + "°";
+    });
+}
+setupButtons();
+setupSliders();
 function updateScene(){
     renderer.render(scene, camera);
 }
