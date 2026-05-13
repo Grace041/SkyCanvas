@@ -1,6 +1,6 @@
 import * as THREE from "./build/three.module.js";
 import { createBackgroundPanel } from "./backgroundUI/backgroundPanel.js";
-import {scene, camera, renderer, setScene, setSceneElements, setSceneLighting, loadBackgroundModels, addBackgroundModel, addFerrisWheel, addOperaHouse, getModelCount, getModelInfo, getSelectedModelTransform, chooseNextModel, chooseLastModel, setModelX, setModelY, setModelZ,setModelScale, setModelRotation, deleteSelectedModel, resetSelectedModel} from "./setup.js";
+import {scene, camera, renderer, setScene, setSceneElements, setSceneLighting, loadBackgroundModels, addBackgroundModel, addFerrisWheel, addOperaHouse, addAirplane, addAsianCity, addNightSkyline, getModelCount, getModelInfo, getSelectedModelTransform, chooseNextModel, chooseLastModel, setModelX, setModelY, setModelZ,setModelScale, setModelRotation, deleteSelectedModel, resetSelectedModel} from "./setup.js";
 createBackgroundPanel();
 setScene();
 setSceneElements();
@@ -44,7 +44,6 @@ window.addEventListener("mousemove", function (event){
     if(pitch > maxPitch){
         pitch = maxPitch;
     }
-
     if(pitch < minPitch){
         pitch = minPitch;
     }
@@ -74,8 +73,7 @@ function updateAllUI(){
 loadBackgroundModels(updateAllUI);
 function setupButtons(){
     document.querySelector("#addModel").addEventListener("click", function (){
-        const offset = getModelCount() * 80;
-        addBackgroundModel(1, offset, -10, -40, 0);
+        addBackgroundModel();
         updateAllUI();
     });
     document.querySelector("#addFerrisWheel").addEventListener("click", function (){
@@ -83,6 +81,15 @@ function setupButtons(){
     });
     document.querySelector("#addOperaHouse").addEventListener("click", function (){
         addOperaHouse(updateAllUI);
+    });
+    document.querySelector("#addAirplane").addEventListener("click", function (){
+        addAirplane(updateAllUI);
+    });
+    document.querySelector("#addAsianCity").addEventListener("click", function (){
+        addAsianCity(updateAllUI);
+    });
+    document.querySelector("#addNightSkyline").addEventListener("click", function (){
+        addNightSkyline(updateAllUI);
     });
     document.querySelector("#prevModel").addEventListener("click", function (){
         chooseLastModel();
