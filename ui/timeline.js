@@ -11,7 +11,7 @@ const gridStep = 2;
 const minimumClipDuration = 0.5;
 const overlapPadding = 0.001;
 
-export function createTimeline({onShapeChange}) {
+export function createTimeline({onShapeChange, onMusicChange = () => {}, onMusicStop = () => {}}) {
     const timeline = document.querySelector("#timeline");
     const timelineRuler = document.querySelector("#timeline-ruler");
     const timelineClips = document.querySelector("#timeline-clips");
@@ -21,10 +21,12 @@ export function createTimeline({onShapeChange}) {
     const stopShowButton = document.querySelector("#stop-show");
     const timelineDurationInput = document.querySelector("#timeline-duration");
     const showClips = [];
+    
     let selectedClipId = null;
     let isPlaying = false;
     let showTime = 0;
     let activeClipId = null;
+    let activeMusicClipId = null;
     let resizingClip = null;
 
     timeline.addEventListener("dragover", (event) => {
@@ -39,12 +41,16 @@ export function createTimeline({onShapeChange}) {
         const shape = event.dataTransfer.getData("text/shape");
         const customShapeId = event.dataTransfer.getData("text/custom-shape-id");
         const customShapeName = event.dataTransfer.getData("text/custom-shape-name");
+        const musicTrackId = event.dataTransfer.getData("text/music-track-id");
+        const musicTrackName = event.dataTransfer.getData("text/music-track-name");
         const startTime = getTimelineTimeFromEvent(event);
 
         if (clipId) {
             moveClip(clipId, startTime);
         } else if (shape) {
-            addClip(shape, startTime, {customShapeId, customShapeName});
+            addClip("shape", startTime, {shape, customShapeId, customShapeName});
+        } else if (musicTrackId) {
+            addClip("music", startTime, {musicTrackId, musicTrackName});
         }
     });
 
@@ -90,6 +96,13 @@ export function createTimeline({onShapeChange}) {
         resizingClip = null;
     });
 
+    window.addEventListener("keydown", (event) => {
+        if ((event.key === "Delete" || event.key === "Backspace") && selectedClipId) {
+            event.preventDefault();
+            removeClip(selectedClipId);
+        }
+    });
+
     render();
 
     return {
@@ -106,7 +119,8 @@ export function createTimeline({onShapeChange}) {
                 return;
             }
 
-            const activeClip = getActiveClip(showTime);
+            const activeClip = getActiveClip(showTime, "shape");
+            const activeMusicClip = getActiveClip(showTime, "music");
 
             if (activeClip && activeClip.id !== activeClipId) {
                 activeClipId = activeClip.id;
@@ -116,13 +130,21 @@ export function createTimeline({onShapeChange}) {
                 onShapeChange("idle");
             }
 
+            if (activeMusicClip && activeMusicClip.id !== activeMusicClipId) {
+                activeMusicClipId = activeMusicClip.id;
+                onMusicChange(activeMusicClip);
+            } else if (!activeMusicClip && activeMusicClipId) {
+                activeMusicClipId = null;
+                onMusicStop();
+            }
+
             updatePlayhead();
         }
     };
 
-    function addClip(shape, start, options = {}) {
+    function addClip(type, start, options = {}) {
         const duration = Math.min(gridStep, getTimelineDuration());
-        const placement = findAvailablePlacement(clampStart(start, duration), duration);
+        const placement = findAvailablePlacement(type, clampStart(start, duration), duration);
 
         if (!placement) {
             return;
@@ -130,9 +152,12 @@ export function createTimeline({onShapeChange}) {
 
         const clip = {
             id: `clip-${Date.now()}-${Math.round(Math.random() * 1000)}`,
-            shape,
+            type,
+            shape: options.shape || null,
             customShapeId: options.customShapeId || null,
             customShapeName: options.customShapeName || "",
+            musicTrackId: options.musicTrackId || null,
+            musicTrackName: options.musicTrackName || "",
             start: placement.start,
             duration
         };
@@ -151,12 +176,38 @@ export function createTimeline({onShapeChange}) {
 
         const nextStart = clampStart(start, clip.duration);
 
-        if (doesClipOverlap(clip.id, nextStart, clip.duration)) {
+        if (doesClipOverlap(clip.id, clip.type, nextStart, clip.duration)) {
             return;
         }
 
         clip.start = nextStart;
         setSelectedClip(clip.id);
+        render();
+    }
+
+    function removeClip(clipId) {
+        const clipIndex = showClips.findIndex((clip) => clip.id === clipId);
+
+        if (clipIndex === -1) {
+            return;
+        }
+
+        const [removedClip] = showClips.splice(clipIndex, 1);
+
+        if (removedClip.id === activeClipId) {
+            activeClipId = null;
+            onShapeChange("idle");
+        }
+
+        if (removedClip.id === activeMusicClipId) {
+            activeMusicClipId = null;
+            onMusicStop();
+        }
+
+        if (selectedClipId === clipId) {
+            selectedClipId = null;
+        }
+
         render();
     }
 
@@ -178,12 +229,17 @@ export function createTimeline({onShapeChange}) {
         for (const clip of showClips) {
             const clipElement = document.createElement("div");
             clipElement.className = "timeline-clip";
+            clipElement.classList.add(`is-${clip.type}`);
             clipElement.classList.toggle("is-selected", clip.id === selectedClipId);
             clipElement.draggable = true;
             clipElement.dataset.clipId = clip.id;
-            clipElement.textContent = clip.customShapeName || shapeNames[clip.shape] || clip.shape;
             clipElement.style.left = `${(clip.start / getTimelineDuration()) * 100}%`;
             clipElement.style.width = `${(clip.duration / getTimelineDuration()) * 100}%`;
+
+            const clipLabel = document.createElement("span");
+            clipLabel.className = "timeline-clip-label";
+            clipLabel.textContent = getClipLabel(clip);
+            clipElement.appendChild(clipLabel);
 
             const leftResizeHandle = document.createElement("div");
             leftResizeHandle.className = "clip-resize-handle is-left";
@@ -192,6 +248,19 @@ export function createTimeline({onShapeChange}) {
             const rightResizeHandle = document.createElement("div");
             rightResizeHandle.className = "clip-resize-handle is-right";
             clipElement.appendChild(rightResizeHandle);
+
+            if (clip.id === selectedClipId) {
+                const deleteButton = document.createElement("button");
+                deleteButton.className = "timeline-clip-delete";
+                deleteButton.type = "button";
+                deleteButton.textContent = "x";
+                clipElement.appendChild(deleteButton);
+
+                deleteButton.addEventListener("click", (event) => {
+                    event.stopPropagation();
+                    removeClip(clip.id);
+                });
+            }
 
             clipElement.addEventListener("click", (event) => {
                 event.stopPropagation();
@@ -245,7 +314,7 @@ export function createTimeline({onShapeChange}) {
             const nextStart = THREE.MathUtils.clamp(time, 0, clip.start + clip.duration - minimumClipDuration);
             const nextDuration = clip.start + clip.duration - nextStart;
 
-            if (!doesClipOverlap(clip.id, nextStart, nextDuration)) {
+            if (!doesClipOverlap(clip.id, clip.type, nextStart, nextDuration)) {
                 clip.start = nextStart;
                 clip.duration = nextDuration;
             }
@@ -256,18 +325,18 @@ export function createTimeline({onShapeChange}) {
         const nextDuration = Math.max(minimumClipDuration, time - clip.start);
         const clampedDuration = Math.min(nextDuration, getTimelineDuration() - clip.start);
 
-        if (!doesClipOverlap(clip.id, clip.start, clampedDuration)) {
+        if (!doesClipOverlap(clip.id, clip.type, clip.start, clampedDuration)) {
             clip.duration = clampedDuration;
         }
     }
 
-    function findAvailablePlacement(start, duration) {
-        if (!doesClipOverlap(null, start, duration)) {
+    function findAvailablePlacement(type, start, duration) {
+        if (!doesClipOverlap(null, type, start, duration)) {
             return {start};
         }
 
         for (let nextStart = 0; nextStart <= getTimelineDuration() - duration; nextStart += gridStep) {
-            if (!doesClipOverlap(null, nextStart, duration)) {
+            if (!doesClipOverlap(null, type, nextStart, duration)) {
                 return {start: nextStart};
             }
         }
@@ -275,11 +344,11 @@ export function createTimeline({onShapeChange}) {
         return null;
     }
 
-    function doesClipOverlap(clipId, start, duration) {
+    function doesClipOverlap(clipId, type, start, duration) {
         const end = start + duration;
 
         return showClips.some((clip) => {
-            if (clip.id === clipId) {
+            if (clip.id === clipId || clip.type !== type) {
                 return false;
             }
 
@@ -288,8 +357,9 @@ export function createTimeline({onShapeChange}) {
         });
     }
 
-    function getActiveClip(time) {
+    function getActiveClip(time, type) {
         return showClips
+            .filter((clip) => clip.type === type)
             .filter((clip) => time >= clip.start && time < clip.start + clip.duration)
             .sort((a, b) => b.start - a.start)[0] || null;
     }
@@ -299,6 +369,8 @@ export function createTimeline({onShapeChange}) {
         playShowButton.textContent = "Play";
         showTime = 0;
         activeClipId = null;
+        activeMusicClipId = null;
+        onMusicStop();
         updatePlayhead();
     }
 
@@ -326,10 +398,18 @@ export function createTimeline({onShapeChange}) {
             clip.duration = Math.min(clip.duration, getTimelineDuration());
             clip.start = clampStart(clip.start, clip.duration);
 
-            while (doesClipOverlap(clip.id, clip.start, clip.duration) && clip.duration > minimumClipDuration) {
+            while (doesClipOverlap(clip.id, clip.type, clip.start, clip.duration) && clip.duration > minimumClipDuration) {
                 clip.duration = Math.max(minimumClipDuration, clip.duration - 0.25);
             }
         }
+    }
+
+    function getClipLabel(clip) {
+        if (clip.type === "music") {
+            return clip.musicTrackName || "Music";
+        }
+
+        return clip.customShapeName || shapeNames[clip.shape] || clip.shape;
     }
 
     function formatTime(value) {

@@ -8,7 +8,7 @@ html, body {
 
 .app-shell {
     display: grid;
-    grid-template-rows: minmax(0, 1fr) 145px;
+    grid-template-rows: minmax(0, 1fr) 166px;
     width: 100vw;
     height: 100vh;
     background: #000000;
@@ -220,7 +220,7 @@ canvas {
 
 .timeline {
     position: relative;
-    height: 92px;
+    height: 114px;
     overflow: hidden;
     border: 1px solid #555555;
     border-radius: 8px;
@@ -262,8 +262,7 @@ canvas {
 
 .timeline-clip {
     position: absolute;
-    top: 0;
-    height: 46px;
+    height: 32px;
     min-width: 34px;
     display: flex;
     align-items: center;
@@ -277,9 +276,54 @@ canvas {
     user-select: none;
 }
 
+.timeline-clip-label {
+    min-width: 0;
+    max-width: calc(100% - 20px);
+    overflow: hidden;
+    padding: 0 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.timeline-clip.is-shape {
+    top: 4px;
+}
+
+.timeline-clip.is-music {
+    bottom: 4px;
+    border-color: #ffd166;
+    background: #7b6841;
+}
+
 .timeline-clip.is-selected {
     border-color: #7df7ff;
     box-shadow: 0 0 0 2px rgba(125, 247, 255, 0.22);
+}
+
+.timeline-clip.is-music.is-selected {
+    border-color: #ffd166;
+    box-shadow: 0 0 0 2px rgba(255, 209, 102, 0.24);
+}
+
+.timeline-clip-delete {
+    position: absolute;
+    top: 5px;
+    right: 6px;
+    z-index: 2;
+    width: 20px;
+    height: 20px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.42);
+    color: white;
+    font: 700 12px/1;
+}
+
+.timeline-clip-delete:hover {
+    background: rgba(0, 0, 0, 0.68);
 }
 
 .clip-resize-handle {

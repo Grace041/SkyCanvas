@@ -10,7 +10,7 @@ import { createTimeline } from "./ui/timeline.js";
 setScene();
 setSceneElements();
 setSceneLighting();
-setupMusicControls();
+const musicControls = setupMusicControls();
 
 const controls = new OrbitControls(camera, renderer.domElement);
 const clock = new THREE.Clock();
@@ -31,7 +31,9 @@ const customShapeControls = createCustomShapeControls({
 });
 
 const timeline = createTimeline({
-    onShapeChange: (shape, clip) => setActiveShape(shape, false, clip)
+    onShapeChange: (shape, clip) => setActiveShape(shape, false, clip),
+    onMusicChange: (clip) => musicControls.playTrack(clip.musicTrackId),
+    onMusicStop: () => musicControls.pause()
 });
 
 shapeControls.setActiveShape(currentShape);
