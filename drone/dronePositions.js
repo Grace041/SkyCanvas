@@ -266,3 +266,15 @@ function normalizeShapePoint(point, shapePoints) {
         y: (point.y - centerY) / largestDimension
     };
 }
+
+export function getSpiralPosition(i, droneCount, time = 0) {
+    const progress = i / droneCount;
+    const turns = 4;
+    const angle = (progress * Math.PI * 2 * turns) + (time * 1.5);
+    const radius = 9 * progress;
+    const y = -1 + (progress * 15) + Math.sin(time * 0.5);
+    const x = radius * Math.cos(angle);
+    const z = radius * Math.sin(angle);
+
+    return new THREE.Vector3(x, y, z);
+}

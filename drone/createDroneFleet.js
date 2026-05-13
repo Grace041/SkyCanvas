@@ -1,5 +1,5 @@
 import * as THREE from "/build/three.module.js";
-import {getCustomShapePosition, getHeartPosition, getIdlePosition, getPlanetPosition, getStarPosition} from "./dronePositions.js";
+import {getCustomShapePosition, getHeartPosition, getIdlePosition, getPlanetPosition, getStarPosition, getSpiralPosition} from "./dronePositions.js";
 
 export function createDroneFleet(scene, droneCount) {
     const droneRadius = 0.25;
@@ -21,6 +21,7 @@ export function createDroneFleet(scene, droneCount) {
     const rotatedTarget = new THREE.Vector3();
     const droneGroup = new THREE.Group();
 
+    let totalTime = 0;
     let currentFormation = "idle";
     let formationRotation = 0;
     let rotationSpeed = 0;
@@ -53,7 +54,7 @@ export function createDroneFleet(scene, droneCount) {
         }
         droneGroup.add(drone);
 
-        drones.push({drone, glow, glowLight});
+        drones.push({drone, glow, glowLight, targetPosition: idlePosition.clone()});
         baseTargets.push(idlePosition.clone());
         animationPositions.push(idlePosition.clone());
     }
@@ -73,12 +74,13 @@ export function createDroneFleet(scene, droneCount) {
                     target = getStarPosition(i, droneCount);
                 } else if (nextFormationName === "planet") {
                     target = getPlanetPosition(i, droneCount);
+                } else if (nextFormationName === "spiral") {
+                    target = getSpiralPosition(i, droneCount);
                 } else if (nextFormationName === "custom" && i < customShapeDroneCount) {
                     target = getCustomShapePosition(i, customShapeDroneCount, customShapePoints);
                 } else {
                     target = getIdlePosition(i, droneCount);
                 }
-
                 baseTargets[i].copy(target);
             }
 
@@ -98,6 +100,7 @@ export function createDroneFleet(scene, droneCount) {
             updateDroneColors();
         },
         update(delta) {
+            totalTime += delta;
             const moveSpeed = Math.min(1, delta * 1.6);
 
             if (currentFormation === "heart" || currentFormation === "star" || currentFormation === "planet" || currentFormation === "custom") {
@@ -107,11 +110,17 @@ export function createDroneFleet(scene, droneCount) {
             for (let i = 0; i < droneCount; i += 1) {
                 const currentDrone = drones[i];
                 const displayPosition = getDisplayPosition(i, moveSpeed);
+                const pulse = Math.sin(totalTime * 3) * 0.2 + 1;
 
                 currentDrone.drone.position.copy(displayPosition);
+                currentDrone.glow.scale.set(pulse, pulse, pulse);
                 currentDrone.glow.position.copy(currentDrone.drone.position);
                 if (currentDrone.glowLight) {
                     currentDrone.glowLight.position.copy(currentDrone.drone.position);
+                }
+                if (currentFormation === "spiral") {
+                    const dynamicTarget = getSpiralPosition(i, droneCount, totalTime);
+                    baseTargets[i].copy(dynamicTarget);
                 }
             }
         }

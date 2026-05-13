@@ -11,7 +11,7 @@ export function setScene() {
     const aspectRatio = renderView.clientWidth / renderView.clientHeight;
     camera = new THREE.PerspectiveCamera(45, aspectRatio, 0.1, 1000);
 
-    camera.position.set(0, 10, 20);
+    camera.position.set(0, 8, 32);
     camera.lookAt(0,0,0);
 
     renderer = new THREE.WebGLRenderer();
@@ -24,10 +24,10 @@ export function setScene() {
 
 
 export function setSceneElements() {
-    const planeGeometry = new THREE.PlaneGeometry(50,50);
+    const planeGeometry = new THREE.PlaneGeometry(75,50);
     const planeMaterial = new THREE.MeshLambertMaterial(
         {
-            color: new THREE.Color(1,1,1),
+            color: new THREE.Color(0.05,0.05,0.1),
             side: THREE.DoubleSide
         }
     );

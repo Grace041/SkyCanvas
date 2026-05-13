@@ -1,8 +1,8 @@
 import * as THREE from "/build/three.module.js";
 import { OrbitControls } from "/build/controls/OrbitControls.js";
 import { createDroneFleet } from "./drone/createDroneFleet.js";
-import { scene, camera, renderer, setScene, setSceneElements, setSceneLighting } from "/setup.js";
-import { setupMusicControls } from "/music/musicUI.js";
+import { scene, camera, renderer, setScene, setSceneElements, setSceneLighting } from "./setup.js";
+import { setupMusicControls } from "./music/musicUI.js";
 import { createControls } from "./ui/controls.js";
 import { createCustomShapeControls } from "./ui/customShapeControls.js";
 import { createTimeline } from "./ui/timeline.js";

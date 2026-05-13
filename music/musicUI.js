@@ -1,5 +1,5 @@
-import { getSelectedMusicFile, hasMusic, isMusicPaused, loadMusic, pauseMusic, playMusic, setMusicVolume, setupMusicPlayer } from "/music/musicPlayer.js";
-import { deleteSavedTracks, readOldSavedMusic, readSavedTrackList, writeSavedTrackList } from "/music/musicStorage.js";
+import { getSelectedMusicFile, hasMusic, isMusicPaused, loadMusic, pauseMusic, playMusic, setMusicVolume, setupMusicPlayer } from "./musicPlayer.js";
+import { deleteSavedTracks, readOldSavedMusic, readSavedTrackList, writeSavedTrackList } from "./musicStorage.js";
 
 let savedTracks = [];
 
