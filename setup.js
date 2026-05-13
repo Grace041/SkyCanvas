@@ -2,6 +2,7 @@ import * as THREE from "./build/three.module.js";
 import{ OBJLoader } from "./build/loaders/OBJLoader.js";
 import{ MTLLoader } from "./build/loaders/MTLLoader.js";
 import{ GLTFLoader } from "./build/loaders/GLTFLoader.js";
+import{ RGBELoader } from "./build/loaders/RGBELoader.js";
 export let scene;
 export let camera;
 export let renderer;
@@ -9,9 +10,12 @@ let cityModelTemplate = null;
 let backgroundModels = [];
 let selectedModelIndex = -1;
 const floorY = -30;
-const defaultCityTransform ={x: 0, y: -10, z: -40, scale: 1, rotation: 0};
-const defaultFerrisWheelTransform ={x: 900, y: 35, z: -500, scale: 25, rotation: 0};
-const defaultOperaHouseTransform ={x: -900, y: -10, z: -500, scale: 100, rotation: 0};
+const defaultCityTransform ={x: -1620, y: -10, z: -400, scale: 2, rotation: 6};
+const defaultFerrisWheelTransform ={x: -900, y: 400, z: -500, scale: 25, rotation: 45};
+const defaultOperaHouseTransform ={x: -2000, y: -10, z: -500, scale: 50, rotation: 30};
+const defaultAirplaneTransform ={x: 0, y: 850, z: -50, scale: 45, rotation: 0};
+const defaultAsianCityTransform ={x: -5000, y: -30, z: -1000, scale: 4, rotation: 0};
+const defaultNightSkylineTransform ={x: -3000, y: -30, z: -700, scale: 10, rotation: 0};
 export function setScene(){
     scene = new THREE.Scene();
     const renderView = document.querySelector(".render-view");
@@ -20,16 +24,35 @@ export function setScene(){
     camera.position.set(900, 300, 900);
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(renderView.clientWidth, renderView.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.0;
     scene.background = new THREE.Color("#000000");
     renderView.appendChild(renderer.domElement);
+    loadMountainBackground();
+}
+function loadMountainBackground(){
+    const rgbeLoader = new RGBELoader();
+    rgbeLoader.load("./models/buildings/MountainsMoon.hdr", function(texture){
+        texture.mapping = THREE.EquirectangularReflectionMapping;
+        scene.environment = texture;
+        const skyGeometry = new THREE.SphereGeometry(9000, 64, 32);
+        const skyMaterial = new THREE.MeshBasicMaterial({
+            map: texture,
+            side: THREE.BackSide,
+            depthWrite: false
+        });
+        const mountainSky = new THREE.Mesh(skyGeometry, skyMaterial);
+        mountainSky.position.copy(camera.position);
+        mountainSky.rotation.y = Math.PI;
+        scene.add(mountainSky);
+    });
 }
 export function setSceneElements(){
     const floorGeometry = new THREE.PlaneGeometry(20000, 20000);
     const floorMaterial = new THREE.MeshBasicMaterial({
-        color: 0x07192b
+        color: 0x030405
     });
     const floor = new THREE.Mesh(floorGeometry, floorMaterial);
     floor.rotation.x = -Math.PI / 2;
@@ -88,12 +111,14 @@ function fixGLBMaterial(object){
                     if(mat.map){
                         mat.map.encoding = THREE.sRGBEncoding;
                     }
+                    mat.side = THREE.DoubleSide;
                     mat.needsUpdate = true;
                 });
             }else{
                 if(child.material.map){
                     child.material.map.encoding = THREE.sRGBEncoding;
                 }
+                child.material.side = THREE.DoubleSide;
                 child.material.needsUpdate = true;
             }
         }
@@ -115,6 +140,27 @@ function chooseModel(index){
         selectedModelIndex = index;
     }
 }
+function addGLBModel(fileName, modelName, defaultTransform, onLoaded){
+    const gltfLoader = new GLTFLoader();
+    gltfLoader.load("./models/buildings/" + fileName, function(gltf){
+        const model = gltf.scene;
+        fixGLBMaterial(model);
+        model.position.set(defaultTransform.x, defaultTransform.y, defaultTransform.z);
+        model.scale.set(defaultTransform.scale, defaultTransform.scale, defaultTransform.scale);
+        model.rotation.y = THREE.MathUtils.degToRad(defaultTransform.rotation);
+        model.userData.modelName = modelName;
+        saveStartTransform(model, defaultTransform);
+        scene.add(model);
+        backgroundModels.push(model);
+        selectedModelIndex = backgroundModels.length - 1;
+        if(onLoaded){
+            onLoaded();
+        }
+    }, undefined, function(error){
+        console.log("Cannot load model: " + fileName);
+        console.log(error);
+    });
+}
 export function getModelCount(){
     return backgroundModels.length;
 }
@@ -126,7 +172,6 @@ export function getModelInfo(){
     const modelName = model.userData.modelName || "Model";
     return modelName + " " + (selectedModelIndex + 1) + " / " + backgroundModels.length;
 }
-
 export function getSelectedModel(){
     if(selectedModelIndex === -1){
         return null;
@@ -140,56 +185,35 @@ export function getSelectedModelTransform(){
     }
     return{x: Math.round(model.position.x), y: Math.round(model.position.y), z: Math.round(model.position.z), scale: Number(model.scale.x.toFixed(1)), rotation: Math.round(THREE.MathUtils.radToDeg(model.rotation.y))};
 }
-export function addBackgroundModel(scale = 1, x = 0, y = -10, z = -40, rotationY = 0){
+export function addBackgroundModel(){
     if(cityModelTemplate === null){
         console.log("City model is still loading.");
         return;
     }
     const newModel = cityModelTemplate.clone(true);
-    newModel.scale.set(scale, scale, scale);
-    newModel.position.set(x, y, z);
-    newModel.rotation.y = THREE.MathUtils.degToRad(rotationY);
+    newModel.scale.set(defaultCityTransform.scale, defaultCityTransform.scale, defaultCityTransform.scale);
+    newModel.position.set(defaultCityTransform.x, defaultCityTransform.y, defaultCityTransform.z);
+    newModel.rotation.y = THREE.MathUtils.degToRad(defaultCityTransform.rotation);
     newModel.userData.modelName = "City";
-    saveStartTransform(newModel,{x: x, y: y, z: z, scale: scale, rotation: rotationY});
+    saveStartTransform(newModel, defaultCityTransform);
     scene.add(newModel);
     backgroundModels.push(newModel);
     selectedModelIndex = backgroundModels.length - 1;
 }
 export function addFerrisWheel(onLoaded){
-    const gltfLoader = new GLTFLoader();
-    gltfLoader.load("./models/buildings/ferriswheel.glb", function (gltf){
-        const ferrisWheel = gltf.scene;
-        fixGLBMaterial(ferrisWheel);
-        ferrisWheel.position.set(defaultFerrisWheelTransform.x, defaultFerrisWheelTransform.y, defaultFerrisWheelTransform.z);
-        ferrisWheel.scale.set(defaultFerrisWheelTransform.scale, defaultFerrisWheelTransform.scale, defaultFerrisWheelTransform.scale);
-        ferrisWheel.rotation.y = THREE.MathUtils.degToRad(defaultFerrisWheelTransform.rotation);
-        ferrisWheel.userData.modelName = "Ferris Wheel";
-        saveStartTransform(ferrisWheel, {x: ferrisWheel.position.x, y: ferrisWheel.position.y, z: ferrisWheel.position.z, scale: defaultFerrisWheelTransform.scale, rotation: defaultFerrisWheelTransform.rotation});
-        scene.add(ferrisWheel);
-        backgroundModels.push(ferrisWheel);
-        selectedModelIndex = backgroundModels.length - 1;
-        if(onLoaded){
-            onLoaded();
-        }
-    });
+    addGLBModel("ferriswheel.glb", "Ferris Wheel", defaultFerrisWheelTransform, onLoaded);
 }
 export function addOperaHouse(onLoaded){
-    const gltfLoader = new GLTFLoader();
-    gltfLoader.load("./models/buildings/sydney_opera_house.glb", function (gltf){
-        const operaHouse = gltf.scene;
-        fixGLBMaterial(operaHouse);
-        operaHouse.position.set(defaultOperaHouseTransform.x, defaultOperaHouseTransform.y, defaultOperaHouseTransform.z);
-        operaHouse.scale.set(defaultOperaHouseTransform.scale, defaultOperaHouseTransform.scale, defaultOperaHouseTransform.scale);
-        operaHouse.rotation.y = THREE.MathUtils.degToRad(defaultOperaHouseTransform.rotation);
-        operaHouse.userData.modelName = "Opera House";
-        saveStartTransform(operaHouse, defaultOperaHouseTransform);
-        scene.add(operaHouse);
-        backgroundModels.push(operaHouse);
-        selectedModelIndex = backgroundModels.length - 1;
-        if(onLoaded){
-            onLoaded();
-        }
-    });
+    addGLBModel("sydney_opera_house.glb", "Opera House", defaultOperaHouseTransform, onLoaded);
+}
+export function addAirplane(onLoaded){
+    addGLBModel("airplane_crj-900_cityjet.glb", "Airplane", defaultAirplaneTransform, onLoaded);
+}
+export function addAsianCity(onLoaded){
+    addGLBModel("asian_city.glb", "Asian City", defaultAsianCityTransform, onLoaded);
+}
+export function addNightSkyline(onLoaded){
+    addGLBModel("night_skyline.glb", "Night Skyline", defaultNightSkylineTransform, onLoaded);
 }
 export function chooseNextModel(){
     chooseModel(selectedModelIndex + 1);
