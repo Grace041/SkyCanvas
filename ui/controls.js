@@ -1,6 +1,7 @@
 export function createControls({droneFleet, onShapeSelected}) {
     const rotationSpeedInput = document.querySelector("#rotation-speed");
     const droneColorInput = document.querySelector("#drone-color");
+    const breathingButton = document.querySelector("#breathing-button");
     const shapeButtons = document.querySelectorAll(".shape-option");
     const initialRotationSpeed = Number(rotationSpeedInput.value);
     const initialDroneColor = droneColorInput.value;
@@ -23,6 +24,19 @@ export function createControls({droneFleet, onShapeSelected}) {
     droneColorInput.addEventListener("input", () => {
         droneFleet.setColor(droneColorInput.value);
     });
+
+    let breathingEnabled = true;
+    if (breathingButton) {
+        breathingButton.addEventListener("click", () => {
+            breathingEnabled = !breathingEnabled;
+            droneFleet.setBreathing(breathingEnabled);
+            if (breathingEnabled === true) {
+                breathingButton.textContent = "Disable Breathing";
+            } else {
+                breathingButton.textContent = "Enable Breathing";
+            }
+        });
+    }
 
     droneFleet.setRotationSpeed(initialRotationSpeed);
     droneFleet.setColor(initialDroneColor);

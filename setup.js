@@ -11,7 +11,7 @@ export function setScene() {
     const aspectRatio = renderView.clientWidth / renderView.clientHeight;
     camera = new THREE.PerspectiveCamera(45, aspectRatio, 0.1, 1000);
 
-    camera.position.set(0, 8, 32);
+    camera.position.set(0, 10, 40);
     camera.lookAt(0,0,0);
 
     renderer = new THREE.WebGLRenderer();

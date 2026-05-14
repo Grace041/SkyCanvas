@@ -28,6 +28,7 @@ export function createDroneFleet(scene, droneCount) {
     let selectedColor = new THREE.Color("#ffffff");
     let customShapePoints = [];
     let customShapeDroneCount = droneCount;
+    let breathingEnabled = true;
 
     scene.add(droneGroup);
 
@@ -99,6 +100,9 @@ export function createDroneFleet(scene, droneCount) {
 
             updateDroneColors();
         },
+        setBreathing(enabled) {
+            breathingEnabled = enabled;
+        },
         update(delta) {
             totalTime += delta;
             const moveSpeed = Math.min(1, delta * 1.6);
@@ -110,7 +114,13 @@ export function createDroneFleet(scene, droneCount) {
             for (let i = 0; i < droneCount; i += 1) {
                 const currentDrone = drones[i];
                 const displayPosition = getDisplayPosition(i, moveSpeed);
-                const pulse = Math.sin(totalTime * 3) * 0.2 + 1;
+
+                let pulse;
+                if (breathingEnabled === true) {
+                    pulse = Math.sin(totalTime * 3) * 0.2 + 1;
+                } else {
+                    pulse = 1;
+                }
 
                 currentDrone.drone.position.copy(displayPosition);
                 currentDrone.glow.scale.set(pulse, pulse, pulse);
