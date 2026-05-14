@@ -278,3 +278,20 @@ export function getSpiralPosition(i, droneCount, time = 0) {
 
     return new THREE.Vector3(x, y, z);
 }
+
+export function getMobiusPosition(i, droneCount, time = 0) {
+    const rows = 4;
+    const dronesPerRow = droneCount / rows;
+    const rowIndex = i % rows;
+    const colIndex = Math.floor(i / rows);
+    const angle = (colIndex / dronesPerRow) * Math.PI * 2;
+    const widthOffset = (rowIndex / (rows - 1)) * 2 - 1;
+    const radius = 12;
+    const width = 1;
+    const twistAngle = (angle / 2) + (time * 0.5);
+    const x = (radius + widthOffset * width * Math.cos(twistAngle)) * Math.cos(angle);
+    const z = (radius + widthOffset + width * Math.cos(twistAngle)) * Math.sin(angle);
+    const y = widthOffset * width * Math.sin(twistAngle);
+
+    return new THREE.Vector3(x, y, z);
+}
