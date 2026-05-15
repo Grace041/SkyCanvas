@@ -2,10 +2,95 @@
 <head>
     <title>Sky Canvas</title>
     <link rel="stylesheet" href="./backgroundUI/backgroundPanel.css">
+    <link rel="stylesheet" href="./ui/style.css">
     <link rel="icon" href="data:,">
 </head>
 <body>
-<div id="app"></div>
+<div class="app-shell">
+    <div class="workspace">
+        <div class="render-view"></div>
+
+        <aside id="tool-panel" class="tool-panel">
+            <div class="panel-section">
+                <h1 class="panel-title">Show Controls</h1>
+
+                <label class="tool-control">
+                    Rotation Speed
+                    <input id="rotation-speed" class="tool-range" type="range" min="0" max="2" step="0.1" value="0.5">
+                </label>
+
+                <label class="tool-control">
+                    Drone Colour
+                    <input id="drone-color" class="tool-input tool-color" type="color" value="#ffffff">
+                </label>
+            </div>
+
+            <div class="panel-section">
+                <h1 class="panel-title">Shapes</h1>
+
+                <div class="shape-grid">
+                    <button class="shape-button shape-option" type="button" draggable="true" data-shape="idle">Idle</button>
+                    <button class="shape-button shape-option" type="button" draggable="true" data-shape="heart">Heart</button>
+                    <button class="shape-button shape-option" type="button" draggable="true" data-shape="star">Star</button>
+                    <button class="shape-button shape-option" type="button" draggable="true" data-shape="planet">Planet</button>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <h1 class="panel-title">Custom Shapes</h1>
+
+                <div id="custom-shape-buttons" class="custom-shape-grid"></div>
+
+                <div id="shape-controls" class="panel-section" hidden>
+                    <h1 class="panel-title">Draw Custom Shape</h1>
+
+                    <div class="shape-builder">
+                        <label class="control-label">
+                            <canvas id="shape-canvas" class="shape-canvas" width="440" height="320"></canvas>
+                        </label>
+
+                        <div>Drones in Shape: <span id="shape-drone-count-value">160</span></div>
+
+                        <input id="shape-drone-count" class="shape-drone-count" type="range" min="24" max="320" step="8" value="160">
+
+                        <div class="shape-actions">
+                            <button id="apply-shape" class="shape-button" type="button">Use Shape</button>
+                            <button id="clear-shape" class="shape-button" type="button">Clear</button>
+                        </div>
+
+                        <input id="saved-shape-name" class="shape-field" type="text" maxlength="28" placeholder="Shape name">
+
+                        <button id="save-shape" class="shape-button" type="button">Save Shape</button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <div class="show-timeline">
+        <div class="timeline-header">
+            <strong>Drone Show Timeline</strong>
+
+            <div class="timeline-actions">
+                <button id="play-show" class="timeline-button" type="button">Play</button>
+                <button id="stop-show" class="timeline-button" type="button">Stop</button>
+
+                <label>Total
+                    <input id="timeline-duration" class="timeline-field" type="number" min="4" max="120" step="1" value="20">
+                    s
+                </label>
+            </div>
+        </div>
+
+        <div id="timeline" class="timeline">
+            <div id="timeline-ruler" class="timeline-ruler"></div>
+            <div id="timeline-empty" class="timeline-empty">Drag shapes here to build the show</div>
+            <div id="timeline-clips" class="timeline-clips"></div>
+            <div id="timeline-playhead" class="timeline-playhead"></div>
+        </div>
+    </div>
+</div>
+
 <script type="module" src="main.js"></script>
 </body>
 </html>
