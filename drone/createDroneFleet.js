@@ -3,6 +3,7 @@ import {
     getCustomShapePosition, getHeartPosition, getIdlePosition, getPlanetPosition, getStarPosition, getSpiralPosition,
     getMobiusPosition
 } from "./dronePositions.js";
+import { getBassLevel, getMidLevel, getTrebleLevel } from "../music/musicPlayer.js";
 
 export function createDroneFleet(scene, droneCount) {
     const droneRadius = 0.25;
@@ -21,6 +22,7 @@ export function createDroneFleet(scene, droneCount) {
     const drones = [];
     const baseTargets = [];
     const animationPositions = [];
+    const formationTargets = [];
     const rotatedTarget = new THREE.Vector3();
     const droneGroup = new THREE.Group();
 
@@ -32,6 +34,7 @@ export function createDroneFleet(scene, droneCount) {
     let customShapePoints = [];
     let customShapeDroneCount = droneCount;
     let breathingEnabled = true;
+    let beatSyncEnabled = false;
 
     scene.add(droneGroup);
 
@@ -61,6 +64,7 @@ export function createDroneFleet(scene, droneCount) {
         drones.push({drone, glow, glowLight, targetPosition: idlePosition.clone()});
         baseTargets.push(idlePosition.clone());
         animationPositions.push(idlePosition.clone());
+        formationTargets.push(idlePosition.clone());
     }
 
     return {
@@ -88,6 +92,7 @@ export function createDroneFleet(scene, droneCount) {
                     target = getIdlePosition(i, droneCount);
                 }
                 baseTargets[i].copy(target);
+                formationTargets[i].copy(target);
             }
 
             updateDroneColors();
@@ -108,6 +113,9 @@ export function createDroneFleet(scene, droneCount) {
         setBreathing(enabled) {
             breathingEnabled = enabled;
         },
+        setBeatSync(enabled) {
+            beatSyncEnabled = enabled;
+        },
         update(delta) {
             totalTime += delta;
             const moveSpeed = Math.min(1, delta * 1.6);
@@ -119,10 +127,46 @@ export function createDroneFleet(scene, droneCount) {
             for (let i = 0; i < droneCount; i += 1) {
                 const currentDrone = drones[i];
                 const displayPosition = getDisplayPosition(i, moveSpeed);
-
                 let pulse;
-                if (breathingEnabled === true) {
-                    pulse = Math.sin(totalTime * 3) * 0.2 + 1;
+
+                if (beatSyncEnabled) {
+                    const bass = getBassLevel();
+                    const mid = getMidLevel();
+                    const treble = getTrebleLevel();
+
+                    const hsl = { h: 0, s: 0, l: 0 };
+                    selectedColor.getHSL(hsl);
+                    const newHue = (hsl.h + mid * 0.08 - treble * 0.12 + 1) % 1;
+                    const newSaturation = Math.min(1, hsl.s + bass * 0.3);
+                    const newLightness = Math.min(1, hsl.l + bass * 0.25);
+                    const reactiveColour = new THREE.Color().setHSL(newHue, newSaturation, newLightness);
+
+                    for (let i = 0; i < droneCount; i++) {
+                        setDroneColor(drones[i], reactiveColour);
+                    }
+
+                    for (let i = 0; i < droneCount; i++) {
+                        if (currentFormation === "spiral") {
+                            formationTargets[i].copy(getSpiralPosition(i, droneCount, totalTime));
+                        } else if (currentFormation === "mobius") {
+                            formationTargets[i].copy(getMobiusPosition(i, droneCount, totalTime));
+                        }
+                        baseTargets[i].lerp(formationTargets[i], 0.25);
+                    }
+
+                    if (bass > 0.6) {
+                        for (let i = 0; i < droneCount; i++) {
+                            const base = baseTargets[i]
+                            const burstStrength = (bass - 0.4) * 1.2;
+                            const outward = new THREE.Vector3(base.x, (base.y * 0.3), base.z).normalize();
+                            base.x += outward.x * burstStrength;
+                            base.y += outward.y * burstStrength;
+                            base.z += outward.z * burstStrength;
+                        }
+                    }
+                    pulse = 1 + (bass * bass) * 2.5;
+                } else if (breathingEnabled === true) {
+                    pulse = Math.sin(totalTime * 3) * 0.3 + 1;
                 } else {
                     pulse = 1;
                 }
