@@ -166,7 +166,9 @@ export function createDroneFleet(scene, droneCount) {
                     }
                     pulse = 1 + (bass * bass) * 2;
                 } else if (breathingEnabled === true) {
-                    pulse = Math.sin(totalTime * 3) * 0.3 + 1;
+                    const breathingSpeed = 3;
+                    const breathingExpanding = 0.3;
+                    pulse = Math.sin(totalTime * breathingSpeed) * breathingExpanding + 1;
                 } else {
                     pulse = 1;
                 }

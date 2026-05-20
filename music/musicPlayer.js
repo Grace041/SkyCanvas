@@ -76,7 +76,7 @@ function analyserSetup() {
     const source = audioContext.createMediaElementSource(music);
 
     analyser = audioContext.createAnalyser();
-    analyser.fftsSize = 256;
+    analyser.fftSize = 256;
 
     frequencyData = new Uint8Array(analyser.frequencyBinCount);
 
@@ -86,10 +86,6 @@ function analyserSetup() {
 
 export function getFrequencyData() {
     if (analyser === null) return null;
-
-    if (audioContext.state === "suspended") {
-        audioContext.resume();
-    }
 
     analyser.getByteFrequencyData(frequencyData);
     return frequencyData;

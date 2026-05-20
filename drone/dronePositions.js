@@ -272,7 +272,9 @@ export function getSpiralPosition(i, droneCount, time = 0) {
     const turns = 4;
     const angle = (progress * Math.PI * 2 * turns) + (time * 1.5);
     const radius = 9 * progress;
-    const y = -1 + (progress * 15) + Math.sin(time * 0.5);
+    const speed = 0.5;
+
+    const y = -1 + (progress * 15) + Math.sin(time * speed);
     const x = radius * Math.cos(angle);
     const z = radius * Math.sin(angle);
 
@@ -288,7 +290,9 @@ export function getMobiusPosition(i, droneCount, time = 0) {
     const widthOffset = (rowIndex / (rows - 1)) * 2 - 1;
     const radius = 12;
     const width = 1;
-    const twistAngle = (angle / 2) + (time * 0.5);
+    const speed = 0.5;
+    const twistAngle = (angle / 2) + (time * speed);
+
     const x = (radius + widthOffset * width * Math.cos(twistAngle)) * Math.cos(angle);
     const z = (radius + widthOffset + width * Math.cos(twistAngle)) * Math.sin(angle);
     const y = widthOffset * width * Math.sin(twistAngle);
