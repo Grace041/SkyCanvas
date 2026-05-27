@@ -42,6 +42,8 @@ setScene();
 setSceneElements();
 setSceneLighting();
 
+const startTarget = new THREE.Vector3(-1500, 1650, -20);
+const startDirection = new THREE.Vector3();
 const controls = new OrbitControls(camera, renderer.domElement);
 const clock = new THREE.Clock();
 const droneFleet = createDroneFleet(scene, 320);
@@ -88,9 +90,6 @@ function setActiveShape(shape, shouldOpenCustomPanel = true, timelineClip = null
     customShapeControls.hide();
     droneFleet.setFormation(shape);
 }
-
-const startTarget = new THREE.Vector3(-1500, 650, -20);
-const startDirection = new THREE.Vector3();
 
 startDirection.subVectors(startTarget, camera.position).normalize();
 
