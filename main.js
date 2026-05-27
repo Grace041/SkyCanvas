@@ -42,9 +42,11 @@ setScene();
 setSceneElements();
 setSceneLighting();
 
-const startTarget = new THREE.Vector3(-1500, 1650, -20);
+const startTarget = new THREE.Vector3(-1500, 650, -20);
 const startDirection = new THREE.Vector3();
 const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(-600, 600, -600);
+controls.update();
 const clock = new THREE.Clock();
 const droneFleet = createDroneFleet(scene, 320);
 
