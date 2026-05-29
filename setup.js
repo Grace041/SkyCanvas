@@ -2,7 +2,7 @@ import * as THREE from "./build/three.module.js";
 import{ OBJLoader } from "./build/loaders/OBJLoader.js";
 import{ MTLLoader } from "./build/loaders/MTLLoader.js";
 import{ GLTFLoader } from "./build/loaders/GLTFLoader.js";
-import{ RGBELoader } from "./build/loaders/RGBELoader.js";
+import{ HDRLoader } from "./build/loaders/HDRLoader.js";
 
 export let scene;
 export let camera;
@@ -52,7 +52,7 @@ export function setScene(){
 }
 
 function loadMountainBackground(){
-    const rgbeLoader = new RGBELoader();
+    const rgbeLoader = new HDRLoader();
 
     rgbeLoader.load("./models/buildings/MountainsMoon.hdr", function(texture){
         texture.mapping = THREE.EquirectangularReflectionMapping;

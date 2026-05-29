@@ -6,44 +6,8 @@ html, body{
     background: #111111;
     font-family: Arial, sans-serif;
 }
-#app{
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    flex-direction: row-reverse;
-    background: #151515;
-}
-#left-area{
-    flex: 1;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    padding: 6px;
-    box-sizing: border-box;
-}
-.render-view{
-    flex: 1;
-    position: relative;
-    background: #071126;
-    border-radius: 4px;
-    overflow: hidden;
-}
 canvas{
     display: block;
-}
-#left-panel{
-    width: 250px;
-    height: 100vh;
-    background: #2f2f2f;
-    color: white;
-    padding: 12px;
-    box-sizing: border-box;
-    font-size: 12px;
-    overflow-y: auto;
-}
-#left-panel h3{
-    margin: 0 0 8px 0;
-    font-size: 14px;
 }
 .panel-section{
     margin-bottom: 14px;
@@ -132,4 +96,18 @@ button:active{
 input[type="range"]{
     width: 100%;
     cursor: pointer;
+}
+.background-panel{
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 72px;
+    width: 250px;
+    background: #2f2f2f;
+    color: white;
+    padding: 12px;
+    box-sizing: border-box;
+    font-size: 12px;
+    overflow-y: auto;
+    z-index: 10;
 }

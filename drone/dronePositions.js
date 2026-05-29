@@ -1,5 +1,5 @@
 import * as THREE from "/build/three.module.js";
-const showScale = 25;
+const showScale = 35;
 export function getIdlePosition(i, droneCount) {
     const columns = Math.ceil(Math.sqrt(droneCount * 2));
     const rows = Math.ceil(droneCount / columns);
@@ -69,7 +69,7 @@ export function getCustomShapePosition(i, droneCount, shapePoints) {
     const centeredPoint = normalizeShapePoint(pointOnPath, shapePoints);
     const shapeWidth = 18;
     const shapeHeight = 14;
-    const centerY = 6;
+    const centerY = 25;
 
     return new THREE.Vector3(
         centeredPoint.x * shapeWidth * showScale,

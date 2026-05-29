@@ -1,5 +1,5 @@
 export function createBackgroundPanel(){
-    const toolPanel = document.querySelector("#tool-panel");
+    const toolPanel = document.querySelector("#background-panel");
 
     toolPanel.innerHTML += `
         <div class="panel-section">
