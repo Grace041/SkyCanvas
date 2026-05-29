@@ -14,7 +14,11 @@ import {
     renderer,
     setScene,
     setSceneElements,
-    setSceneLighting,
+    setSceneLighting
+} from "./setup.js";
+
+import {
+    setBackgroundScene,
     loadBackgroundModels,
     addBackgroundModel,
     addFerrisWheel,
@@ -34,11 +38,12 @@ import {
     setModelRotation,
     deleteSelectedModel,
     resetSelectedModel
-} from "./setup.js";
+} from "./background/backgroundModels.js";
 
 createBackgroundPanel();
 
 setScene();
+setBackgroundScene(scene);
 setSceneElements();
 setSceneLighting();
 
