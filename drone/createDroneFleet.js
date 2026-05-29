@@ -118,7 +118,15 @@ export function createDroneFleet(scene, droneCount) {
         },
         update(delta) {
             totalTime += delta;
-            const moveSpeed = Math.min(1, delta * 1.6);
+            const baseSpeed = 1.6;
+            let musicSpeedBoost = 0;
+
+            if (beatSyncEnabled) {
+                const bass = getBassLevel();
+                musicSpeedBoost += bass * 1.5;
+            }
+
+            const moveSpeed = Math.min(1, delta * (baseSpeed + musicSpeedBoost));
 
             if (currentFormation === "heart" || currentFormation === "star" || currentFormation === "planet" || currentFormation === "custom" || currentFormation === "mobius") {
                 formationRotation += delta * rotationSpeed;
