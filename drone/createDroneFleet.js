@@ -6,7 +6,7 @@ import {
 import { getBassLevel, getMidLevel, getTrebleLevel } from "../music/musicPlayer.js";
 
 export function createDroneFleet(scene, droneCount) {
-    const droneRadius = 0.25;
+    const droneRadius = 10;
     const maxGlowLights = 24;
     const heartDroneCount = droneCount;
     const droneGeometry = new THREE.SphereGeometry(droneRadius, 20, 20);
@@ -47,7 +47,7 @@ export function createDroneFleet(scene, droneCount) {
 
         const glow = new THREE.Sprite(glowMaterial.clone());
         glow.position.copy(drone.position);
-        glow.scale.set(1, 1, 1);
+        glow.scale.set(35, 35, 35);
 
         const glowLight = i < maxGlowLights ? new THREE.PointLight(new THREE.Color("#ffffff"), 0.18, 1.8) : null;
 

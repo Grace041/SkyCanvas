@@ -5,6 +5,8 @@ const shapeNames = {
     heart: "Heart",
     star: "Star",
     planet: "Planet",
+    spiral: "Spiral",
+    mobius: "Mobius Strip",
     custom: "Custom"
 };
 const gridStep = 2;

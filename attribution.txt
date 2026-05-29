@@ -1,2 +1,14 @@
 Buildings by ...
 [website]
+
+cityNight(gg.obj): "San Francisco City" (https://skfb.ly/6pzNs) by Abimael Gonzalez is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
+
+sydney_opera_house.glb: "Sydney Opera House" (https://skfb.ly/6RBrv) by Nick Reinhardt is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
+
+ferriswheel.glb: "Ferriswheel" (https://skfb.ly/oI8zY) by booth4684 is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
+
+night_skyline.glb: "Low Poly Night City Building Skyline" (https://skfb.ly/oPO8T) by 99.Miles is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
+
+asian_city.glb: "Asian Themed Low Poly Night City Buildings" (https://skfb.ly/pwKLV) by 99.Miles is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
+
+airplane_crj-900_cityjet.glb: "Airplane CRJ-900 Cityjet" (https://skfb.ly/oAYDw) by CityJet Training is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).

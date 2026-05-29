@@ -1,18 +1,18 @@
 import * as THREE from "/build/three.module.js";
-
+const showScale = 35;
 export function getIdlePosition(i, droneCount) {
     const columns = Math.ceil(Math.sqrt(droneCount * 2));
     const rows = Math.ceil(droneCount / columns);
     const usableFloorSize = 44;
     const spacing = Math.min(4, usableFloorSize / Math.max(1, columns - 1), usableFloorSize / Math.max(1, rows - 1));
-    const droneRadius = 0.25;
+    const droneRadius = 1.5;
     const floorY = -10;
     const row = Math.floor(i / columns);
     const column = i % columns;
     const x = (column - (columns - 1) / 2) * spacing;
     const z = (row - (rows - 1) / 2) * spacing;
 
-    return new THREE.Vector3(x, floorY + droneRadius, z);
+    return new THREE.Vector3(x * showScale, floorY + droneRadius, z * showScale);
 }
 
 export function getHeartPosition(i, droneCount) {
@@ -20,19 +20,19 @@ export function getHeartPosition(i, droneCount) {
     const angle = progress * Math.PI * 2;
     const layer = i % 5;
     const scale = 0.65;
-    const heightOffset = 8;
+    const heightOffset = 25;
     const depthSpacing = 1.2;
 
     const x = 16 * Math.pow(Math.sin(angle), 3);
     const y = 13 * Math.cos(angle) - 5 * Math.cos(2 * angle) - 2 * Math.cos(3 * angle) - Math.cos(4 * angle);
     const z = (layer - 2) * depthSpacing;
 
-    return new THREE.Vector3(x * scale, y * scale + heightOffset, z);
+    return new THREE.Vector3(x * scale * showScale, (y * scale + heightOffset) * showScale, z * showScale);
 }
 
 export function getPlanetPosition(i, droneCount) {
     const planetDroneCount = Math.floor(droneCount * 0.72);
-    const centerY = 6;
+    const centerY = 25;
     const planetRadius = 5.5;
 
     if (i < planetDroneCount) {
@@ -44,7 +44,7 @@ export function getPlanetPosition(i, droneCount) {
 
 export function getStarPosition(i, droneCount) {
     const faceLineDroneCount = Math.floor(droneCount * 0.78);
-    const centerY = 6;
+    const centerY = 25;
     const outerRadius = 8.6;
     const innerRadius = 3.9;
     const depth = 1;
@@ -69,12 +69,12 @@ export function getCustomShapePosition(i, droneCount, shapePoints) {
     const centeredPoint = normalizeShapePoint(pointOnPath, shapePoints);
     const shapeWidth = 18;
     const shapeHeight = 14;
-    const centerY = 6;
+    const centerY = 25;
 
     return new THREE.Vector3(
-        centeredPoint.x * shapeWidth,
-        -centeredPoint.y * shapeHeight + centerY,
-        (band - 1) * 0.75
+        centeredPoint.x * shapeWidth * showScale,
+        (-centeredPoint.y * shapeHeight + centerY) * showScale,
+        (band - 1) * 0.75 * showScale
     );
 }
 
@@ -86,7 +86,7 @@ function getPlanetBodyPosition(i, planetDroneCount, centerY, planetRadius) {
     const x = Math.cos(angle) * radiusAtY * planetRadius;
     const z = Math.sin(angle) * radiusAtY * planetRadius;
 
-    return new THREE.Vector3(x, y * planetRadius + centerY, z);
+    return scalePosition(new THREE.Vector3(x, y * planetRadius + centerY, z));
 }
 
 function getPlanetRingPosition(i, ringDroneCount, centerY) {
@@ -102,7 +102,7 @@ function getPlanetRingPosition(i, ringDroneCount, centerY) {
     const y = -localZ * Math.sin(tilt) + (band - 1) * 0.18;
     const z = localZ * Math.cos(tilt);
 
-    return new THREE.Vector3(localX, y + centerY, z);
+    return scalePosition(new THREE.Vector3(localX, y + centerY, z));
 }
 
 function getStarFaceLinePosition(i, faceLineDroneCount, centerY, outerRadius, innerRadius, depth, relief) {
@@ -117,7 +117,7 @@ function getStarFaceLinePosition(i, faceLineDroneCount, centerY, outerRadius, in
     if (faceIndex < outlineDroneCount) {
         const point = sampleStarPerimeter(faceIndex, outlineDroneCount, outerRadius, innerRadius);
 
-        return new THREE.Vector3(point.x, point.y + centerY, outlineZ);
+        return scalePosition(new THREE.Vector3(point.x, point.y + centerY, outlineZ));
     }
 
     return getStarSeamPosition(
@@ -141,7 +141,7 @@ function getStarSeamPosition(i, seamDroneCount, centerY, outerRadius, innerRadiu
     const y = vertex.y * seamProgress;
     const z = THREE.MathUtils.lerp(peakZ, outlineZ, seamProgress);
 
-    return new THREE.Vector3(x, y + centerY, z);
+    return scalePosition(new THREE.Vector3(x, y + centerY, z));
 }
 
 function getStarDepthEdgePosition(i, edgeDroneCount, centerY, outerRadius, innerRadius, depth) {
@@ -152,7 +152,7 @@ function getStarDepthEdgePosition(i, edgeDroneCount, centerY, outerRadius, inner
     const vertex = vertices[edgeIndex];
     const z = THREE.MathUtils.lerp(depth / 2, -depth / 2, progress);
 
-    return new THREE.Vector3(vertex.x, vertex.y + centerY, z);
+    return scalePosition(new THREE.Vector3(vertex.x, vertex.y + centerY, z));
 }
 
 function sampleStarPerimeter(sampleIndex, sampleCount, outerRadius, innerRadius) {
@@ -298,4 +298,12 @@ export function getMobiusPosition(i, droneCount, time = 0) {
     const y = widthOffset * width * Math.sin(twistAngle);
 
     return new THREE.Vector3(x, y, z);
+}
+
+function scalePosition(position) {
+    return new THREE.Vector3(
+        position.x * showScale,
+        position.y * showScale,
+        position.z * showScale
+    );
 }

@@ -1,67 +1,74 @@
-import * as THREE from "/build/three.module.js"
+import * as THREE from "./build/three.module.js";
+import {
+    loadMountainBackground,
+    setSceneElements as addSceneElements,
+    setSceneLighting as addSceneLighting
+} from "./background/sceneEnvironment.js";
 
 export let scene;
 export let camera;
 export let renderer;
+
 const resizeCallbacks = [];
 
-export function setScene() {
+export function setScene(){
     scene = new THREE.Scene();
+
     const renderView = document.querySelector(".render-view");
     const aspectRatio = renderView.clientWidth / renderView.clientHeight;
-    camera = new THREE.PerspectiveCamera(45, aspectRatio, 0.1, 1000);
 
-    camera.position.set(0, 10, 40);
-    camera.lookAt(0,0,0);
+    camera = new THREE.PerspectiveCamera(75, aspectRatio, 0.1, 10000);
+    camera.position.set(900, 200, 1000);
+    camera.lookAt(0, 0, 0);
 
-    renderer = new THREE.WebGLRenderer();
+    renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(renderView.clientWidth, renderView.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    scene.background = new THREE.Color("#07142f");
-    document.querySelector(".render-view").appendChild(renderer.domElement);
+
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
+
+    scene.background = new THREE.Color("#000000");
+
+    renderView.appendChild(renderer.domElement);
+
+    loadMountainBackground(scene, camera);
 }
 
-
-export function setSceneElements() {
-    const planeGeometry = new THREE.PlaneGeometry(75,50);
-    const planeMaterial = new THREE.MeshLambertMaterial(
-        {
-            color: new THREE.Color(0.05,0.05,0.1),
-            side: THREE.DoubleSide
-        }
-    );
-    const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-    plane.rotation.x += Math.PI/2;
-    plane.position.y -= 10;
-    plane.receiveShadow = true;
-    scene.add(plane);
+export function setSceneElements(){
+    addSceneElements(scene);
 }
 
-export function setSceneLighting() {
-    const cameraLight = new THREE.PointLight( new THREE.Color(1,1,1), 0.5);
-    camera.add(cameraLight);
-    scene.add(camera);
-
-    const ambientLight = new THREE.AmbientLight(new THREE.Color(1,1,1),0.2);
-    scene.add(ambientLight);
+export function setSceneLighting(){
+    addSceneLighting(scene, camera);
 }
 
-//Event Listeners
-function resizeRenderView() {
-    const width = document.querySelector(".render-view").clientWidth;
-    const height = document.querySelector(".render-view").clientHeight;
-    renderer.setSize(width,height);
-    camera.aspect = width/height;
+function resizeRenderView(){
+    if(!renderer || !camera){
+        return;
+    }
+
+    const renderView = document.querySelector(".render-view");
+    const width = renderView.clientWidth;
+    const height = renderView.clientHeight;
+
+    renderer.setSize(width, height);
+    camera.aspect = width / height;
     camera.updateProjectionMatrix();
-    renderer.render(scene,camera);
 
-    for (const callback of resizeCallbacks) {
+    renderer.render(scene, camera);
+
+    for(const callback of resizeCallbacks){
         callback();
     }
 }
+
 window.addEventListener("resize", resizeRenderView);
 
-export function onRenderViewResize(callback) {
+export function onRenderViewResize(callback){
     resizeCallbacks.push(callback);
 }
