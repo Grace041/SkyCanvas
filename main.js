@@ -6,7 +6,7 @@ import { createControls } from "./ui/controls.js";
 import { createCustomShapeControls } from "./ui/customShapeControls.js";
 import { createTimeline } from "./ui/timeline.js";
 
-import { createBackgroundPanel } from "./backgroundUI/backgroundPanel.js";
+import { createBackgroundPanel } from "./ui/backgroundPanel.js";
 
 import {
     scene,

@@ -1,0 +1,106 @@
+.background-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 10;
+    box-sizing: border-box;
+    width: 230px;
+    margin: 10px;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 14px;
+    border-left: 1px solid #3c3c3c;
+    border-radius: 10px;
+    background: #343434;
+    color: white;
+    font-size: 14px;
+    font-family: Arial, sans-serif;
+}
+
+.background-panel #model-info {
+    border: 1px solid #676767;
+    border-radius: 0;
+    background: #2f2f2f;
+    color: white;
+    padding: 7px 8px;
+    font-size: 12px;
+}
+
+.background-panel .hint {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.64);
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.background-panel .button-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+}
+
+.background-panel button {
+    min-height: 34px;
+    border: 1px solid #6a6a6a;
+    border-radius: 5px;
+    background: #4a4a4a;
+    color: white;
+    font: inherit;
+    cursor: pointer;
+}
+
+.background-panel button:hover {
+    background: #5a5a5a;
+}
+
+.background-panel button:active {
+    background: #6a6a6a;
+}
+
+.background-panel .wide-button {
+    width: 100%;
+}
+
+.background-panel .main-button {
+    border-color: #7df7ff;
+    background: #50666a;
+}
+
+.background-panel .delete-button {
+    border-color: #9b5c5c;
+    background: #633838;
+}
+
+.background-panel .slider-box {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.background-panel .slider-top,
+.background-panel .slider-ends {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.background-panel .slider-name {
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.background-panel .slider-value,
+.background-panel .slider-ends {
+    color: rgba(255, 255, 255, 0.64);
+    font-size: 12px;
+}
+
+.background-panel input[type="range"] {
+    width: 100%;
+    accent-color: white;
+    cursor: pointer;
+}
