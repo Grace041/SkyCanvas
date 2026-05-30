@@ -66,6 +66,23 @@ export function createControls({droneFleet, onShapeSelected}) {
             shapeButtons.forEach((button) => {
                 button.classList.toggle("is-active", button.dataset.shape === shape);
             });
+        },
+        getTimelineSettings() {
+            return {
+                color: droneColorInput.value,
+                rotationSpeed: Number(rotationSpeedInput.value)
+            };
+        },
+        applyTimelineSettings({color, rotationSpeed}) {
+            if (color) {
+                droneColorInput.value = color;
+                droneFleet.setColor(color);
+            }
+
+            if (typeof rotationSpeed === "number") {
+                rotationSpeedInput.value = rotationSpeed;
+                droneFleet.setRotationSpeed(rotationSpeed);
+            }
         }
     };
 }

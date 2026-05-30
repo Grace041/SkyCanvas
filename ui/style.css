@@ -8,7 +8,7 @@ html, body {
 
 .app-shell {
     display: grid;
-    grid-template-rows: minmax(0, 1fr) 166px;
+    grid-template-rows: minmax(0, 1fr) 196px;
     width: 100vw;
     height: 100vh;
     background: #000000;
@@ -219,6 +219,37 @@ canvas {
     gap: 8px;
 }
 
+.timeline-clip-editor {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+.timeline-clip-editor label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.timeline-clip-editor.is-disabled {
+    opacity: 0.5;
+}
+
+.timeline-clip-color {
+    width: 38px;
+    height: 24px;
+    padding: 1px;
+    border: 1px solid #676767;
+    background: #2f2f2f;
+}
+
+.timeline-clip-range {
+    width: 110px;
+    accent-color: white;
+}
+
 .timeline {
     position: relative;
     height: 114px;
@@ -288,6 +319,10 @@ canvas {
 
 .timeline-clip.is-shape {
     top: 4px;
+    border-color: var(--clip-color, #7df7ff);
+    background:
+        linear-gradient(90deg, var(--clip-color, #7df7ff) 0 7px, transparent 7px),
+        #4f8f99;
 }
 
 .timeline-clip.is-music {

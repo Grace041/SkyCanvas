@@ -10,15 +10,27 @@ const shapeNames = {
     custom: "Custom"
 };
 const gridStep = 2;
+const rulerStep = 10;
+const defaultClipDuration = 10;
 const minimumClipDuration = 0.5;
 const overlapPadding = 0.001;
 
-export function createTimeline({onShapeChange, onMusicChange = () => {}, onMusicStop = () => {}}) {
+export function createTimeline({
+    onShapeChange,
+    onMusicChange = () => {},
+    onMusicStop = () => {},
+    onClipSettingsChange = () => {},
+    getDefaultClipSettings = () => ({color: "#ffffff", rotationSpeed: 0.5})
+}) {
     const timeline = document.querySelector("#timeline");
     const timelineRuler = document.querySelector("#timeline-ruler");
     const timelineClips = document.querySelector("#timeline-clips");
     const timelineEmpty = document.querySelector("#timeline-empty");
     const timelinePlayhead = document.querySelector("#timeline-playhead");
+    const clipEditor = document.querySelector("#timeline-clip-editor");
+    const clipColorInput = document.querySelector("#timeline-clip-color");
+    const clipRotationInput = document.querySelector("#timeline-clip-rotation");
+    const clipRotationValue = document.querySelector("#timeline-clip-rotation-value");
     const playShowButton = document.querySelector("#play-show");
     const stopShowButton = document.querySelector("#stop-show");
     const timelineDurationInput = document.querySelector("#timeline-duration");
@@ -77,6 +89,14 @@ export function createTimeline({onShapeChange, onMusicChange = () => {}, onMusic
         showTime = THREE.MathUtils.clamp(showTime, 0, getTimelineDuration());
         clampClips();
         render();
+    });
+
+    clipColorInput.addEventListener("input", () => {
+        updateSelectedShapeClip({color: clipColorInput.value});
+    });
+
+    clipRotationInput.addEventListener("input", () => {
+        updateSelectedShapeClip({rotationSpeed: Number(clipRotationInput.value)});
     });
 
     window.addEventListener("pointermove", (event) => {
@@ -145,8 +165,9 @@ export function createTimeline({onShapeChange, onMusicChange = () => {}, onMusic
     };
 
     function addClip(type, start, options = {}) {
-        const duration = Math.min(gridStep, getTimelineDuration());
+        const duration = Math.min(defaultClipDuration, getTimelineDuration());
         const placement = findAvailablePlacement(type, clampStart(start, duration), duration);
+        const defaultClipSettings = getDefaultClipSettings();
 
         if (!placement) {
             return;
@@ -160,6 +181,8 @@ export function createTimeline({onShapeChange, onMusicChange = () => {}, onMusic
             customShapeName: options.customShapeName || "",
             musicTrackId: options.musicTrackId || null,
             musicTrackName: options.musicTrackName || "",
+            color: type === "shape" ? defaultClipSettings.color : null,
+            rotationSpeed: type === "shape" ? defaultClipSettings.rotationSpeed : null,
             start: placement.start,
             duration
         };
@@ -226,7 +249,7 @@ export function createTimeline({onShapeChange, onMusicChange = () => {}, onMusic
         timelineClips.replaceChildren();
         renderRuler();
         timelineEmpty.hidden = showClips.length > 0;
-        timeline.style.setProperty("--timeline-grid-size", `${(gridStep / getTimelineDuration()) * 100}%`);
+        timeline.style.setProperty("--timeline-grid-size", `${(rulerStep / getTimelineDuration()) * 100}%`);
 
         for (const clip of showClips) {
             const clipElement = document.createElement("div");
@@ -237,6 +260,10 @@ export function createTimeline({onShapeChange, onMusicChange = () => {}, onMusic
             clipElement.dataset.clipId = clip.id;
             clipElement.style.left = `${(clip.start / getTimelineDuration()) * 100}%`;
             clipElement.style.width = `${(clip.duration / getTimelineDuration()) * 100}%`;
+
+            if (clip.type === "shape" && clip.color) {
+                clipElement.style.setProperty("--clip-color", clip.color);
+            }
 
             const clipLabel = document.createElement("span");
             clipLabel.className = "timeline-clip-label";
@@ -292,21 +319,51 @@ export function createTimeline({onShapeChange, onMusicChange = () => {}, onMusic
         }
 
         updatePlayhead();
+        updateClipEditor();
+    }
+
+    function updateSelectedShapeClip(patch) {
+        const clip = getClip(selectedClipId);
+
+        if (!clip || clip.type !== "shape") {
+            return;
+        }
+
+        Object.assign(clip, patch);
+        onClipSettingsChange(clip);
+        render();
+    }
+
+    function updateClipEditor() {
+        const clip = getClip(selectedClipId);
+        const canEditClip = clip && clip.type === "shape";
+
+        clipEditor.classList.toggle("is-disabled", !canEditClip);
+        clipColorInput.disabled = !canEditClip;
+        clipRotationInput.disabled = !canEditClip;
+
+        if (!canEditClip) {
+            return;
+        }
+
+        clipColorInput.value = clip.color || "#ffffff";
+        clipRotationInput.value = clip.rotationSpeed ?? 0.5;
+        clipRotationValue.textContent = `${formatTime(Number(clipRotationInput.value))}x`;
     }
 
     function renderRuler() {
         timelineRuler.replaceChildren();
 
         const duration = getTimelineDuration();
-        const markerCount = Math.floor(duration / gridStep);
+        const markerCount = Math.floor(duration / rulerStep);
 
         for (let i = 0; i <= markerCount; i += 1) {
             const label = document.createElement("div");
-            const time = gridStep * i;
+            const time = rulerStep * i;
 
             label.className = "timeline-time-label";
             label.textContent = `${formatTime(time)}s`;
-            label.style.left = `${(i / markerCount) * 100}%`;
+            label.style.left = `${(time / duration) * 100}%`;
             timelineRuler.appendChild(label);
         }
     }
@@ -388,7 +445,7 @@ export function createTimeline({onShapeChange, onMusicChange = () => {}, onMusic
     }
 
     function getTimelineDuration() {
-        return Math.max(4, Number(timelineDurationInput.value) || 20);
+        return Math.max(4, Number(timelineDurationInput.value) || 90);
     }
 
     function clampStart(start, duration) {

@@ -73,7 +73,9 @@ const customShapeControls = createCustomShapeControls({
 const timeline = createTimeline({
     onShapeChange: (shape, clip) => setActiveShape(shape, false, clip),
     onMusicChange: (clip) => musicControls.playTrack(clip.musicTrackId),
-    onMusicStop: () => musicControls.pause()
+    onMusicStop: () => musicControls.pause(),
+    onClipSettingsChange: (clip) => shapeControls.applyTimelineSettings(clip),
+    getDefaultClipSettings: () => shapeControls.getTimelineSettings()
 });
 
 shapeControls.setActiveShape(currentShape);
@@ -81,6 +83,10 @@ shapeControls.setActiveShape(currentShape);
 function setActiveShape(shape, shouldOpenCustomPanel = true, timelineClip = null){
     currentShape = shape;
     shapeControls.setActiveShape(shape);
+
+    if(timelineClip){
+        shapeControls.applyTimelineSettings(timelineClip);
+    }
 
     if(shape === "custom"){
         if(timelineClip?.customShapeId){
