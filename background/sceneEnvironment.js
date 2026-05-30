@@ -6,25 +6,11 @@ const floorY = -30;
 export function loadMountainBackground(scene, camera){
     const rgbeLoader = new HDRLoader();
 
-    rgbeLoader.load("./models/buildings/MountainsMoon.hdr", function(texture){
+    rgbeLoader.load("./models/buildings/Mountains1.hdr", function(texture){
         texture.mapping = THREE.EquirectangularReflectionMapping;
 
+        scene.background = texture;
         scene.environment = texture;
-
-        const skyGeometry = new THREE.SphereGeometry(9000, 64, 32);
-
-        const skyMaterial = new THREE.MeshBasicMaterial({
-            map: texture,
-            side: THREE.BackSide,
-            depthWrite: false
-        });
-
-        const mountainSky = new THREE.Mesh(skyGeometry, skyMaterial);
-
-        mountainSky.position.copy(camera.position);
-        mountainSky.rotation.y = Math.PI;
-
-        scene.add(mountainSky);
     });
 }
 

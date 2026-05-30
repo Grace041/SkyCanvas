@@ -12,3 +12,6 @@ night_skyline.glb: "Low Poly Night City Building Skyline" (https://skfb.ly/oPO8T
 asian_city.glb: "Asian Themed Low Poly Night City Buildings" (https://skfb.ly/pwKLV) by 99.Miles is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
 
 airplane_crj-900_cityjet.glb: "Airplane CRJ-900 Cityjet" (https://skfb.ly/oAYDw) by CityJet Training is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
+
+Mountains.hdr and MountainsMoon.hdr: https://opengameart.org/content/mountain-skyboxcubemap
+(Mountains1.hdr is the image I rotated horizontally using GIMP)
