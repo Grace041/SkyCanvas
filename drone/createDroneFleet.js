@@ -12,7 +12,7 @@ export function createDroneFleet(scene, droneCount) {
     const droneGeometry = new THREE.SphereGeometry(droneRadius, 20, 20);
     const droneMaterial = new THREE.MeshStandardMaterial({
         color: new THREE.Color("#ffffff"),
-        emissive: new THREE.Color("#ffffff"),
+        emissive: new THREE.Color("#000000"),
         emissiveIntensity: 0.1
     });
     const rotationAxis = new THREE.Vector3(0, 1, 0);
@@ -53,7 +53,7 @@ export function createDroneFleet(scene, droneCount) {
 
         const glow = new THREE.Sprite(glowMaterial.clone());
         glow.position.copy(drone.position);
-        glow.scale.set(60, 60, 60);
+        glow.scale.set(30, 30, 30);
 
         const glowLight = i < maxGlowLights ? new THREE.PointLight(new THREE.Color("#ffffff"), 5, 2000) : null;
 
@@ -201,7 +201,7 @@ export function createDroneFleet(scene, droneCount) {
 
                 currentDrone.drone.position.copy(displayPosition);
                 currentDrone.drone.material.emissiveIntensity = 0.1;
-                const glowSize = Math.min(80, 60 * pulse);
+                const glowSize = Math.min(50, 40 * pulse);
                 currentDrone.glow.scale.set(glowSize, glowSize, glowSize);
                 currentDrone.glow.position.copy(currentDrone.drone.position);
 
@@ -243,6 +243,8 @@ export function createDroneFleet(scene, droneCount) {
 
 function setDroneColor(currentDrone, color) {
     currentDrone.drone.material.color.copy(color);
+    currentDrone.drone.material.emissive.copy(color);
+    currentDrone.drone.material.emissiveIntensity = 0.3;
     currentDrone.glow.material.color.copy(color);
     if (currentDrone.glowLight) {
         currentDrone.glowLight.color.copy(color);
