@@ -155,7 +155,7 @@ export function createDroneFleet(scene, droneCount) {
                     selectedColor.getHSL(hsl);
                     const newHue = (hsl.h + mid * 0.03 - treble * 0.05 + 1) % 1;
                     const newSaturation = Math.min(1, hsl.s + bass * 0.6);
-                    const newLightness = Math.min(1, hsl.l + bass * 0.05);
+                    const newLightness = Math.min(1, hsl.l + bass * 0.035);
                     const reactiveColour = new THREE.Color().setHSL(newHue, newSaturation, newLightness);
 
                     for (let i = 0; i < droneCount; i++) {
