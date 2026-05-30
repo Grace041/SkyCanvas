@@ -181,7 +181,7 @@ export function createDroneFleet(scene, droneCount) {
                             base.z += outward.z * burstStrength;
                         }
                     }
-                    pulse = 1 + (bass * bass) * 0.5;
+                    pulse = 1 + (bass * bass) * 0.3;
                 } else if (breathingEnabled === true) {
                     const breathingSpeed = 3;
                     const breathingExpanding = 0.3;
@@ -201,7 +201,7 @@ export function createDroneFleet(scene, droneCount) {
 
                 currentDrone.drone.position.copy(displayPosition);
                 currentDrone.drone.material.emissiveIntensity = 0.1;
-                const glowSize = Math.min(50, 40 * pulse);
+                const glowSize = Math.min(45, 40 * pulse);
                 currentDrone.glow.scale.set(glowSize, glowSize, glowSize);
                 currentDrone.glow.position.copy(currentDrone.drone.position);
 
