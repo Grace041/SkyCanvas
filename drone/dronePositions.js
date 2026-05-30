@@ -1,4 +1,4 @@
-import * as THREE from "/build/three.module.js";
+import * as THREE from "../build/three.module.js";
 const showScale = 35;
 export function getIdlePosition(i, droneCount) {
     const columns = Math.ceil(Math.sqrt(droneCount * 2));
@@ -273,12 +273,13 @@ export function getSpiralPosition(i, droneCount, time = 0) {
     const angle = (progress * Math.PI * 2 * turns) + (time * 1.5);
     const radius = 9 * progress;
     const speed = 0.5;
+    const centerY = 25;
 
-    const y = -1 + (progress * 15) + Math.sin(time * speed);
+    const y = centerY + (-1 + (progress * 15) + Math.sin(time * speed));
     const x = radius * Math.cos(angle);
     const z = radius * Math.sin(angle);
 
-    return new THREE.Vector3(x, y, z);
+    return scalePosition(new THREE.Vector3(x, y, z));
 }
 
 export function getMobiusPosition(i, droneCount, time = 0) {
@@ -292,12 +293,13 @@ export function getMobiusPosition(i, droneCount, time = 0) {
     const width = 1;
     const speed = 0.5;
     const twistAngle = (angle / 2) + (time * speed);
+    const centerY = 25;
 
     const x = (radius + widthOffset * width * Math.cos(twistAngle)) * Math.cos(angle);
     const z = (radius + widthOffset + width * Math.cos(twistAngle)) * Math.sin(angle);
-    const y = widthOffset * width * Math.sin(twistAngle);
+    const y = centerY + widthOffset * width * Math.sin(twistAngle);
 
-    return new THREE.Vector3(x, y, z);
+    return scalePosition(new THREE.Vector3(x, y, z));
 }
 
 function scalePosition(position) {

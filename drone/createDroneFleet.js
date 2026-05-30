@@ -1,4 +1,4 @@
-import * as THREE from "/build/three.module.js";
+import * as THREE from "../build/three.module.js";
 import {
     getCustomShapePosition, getHeartPosition, getIdlePosition, getPlanetPosition, getStarPosition, getSpiralPosition,
     getMobiusPosition
@@ -10,14 +10,20 @@ export function createDroneFleet(scene, droneCount) {
     const maxGlowLights = 24;
     const heartDroneCount = droneCount;
     const droneGeometry = new THREE.SphereGeometry(droneRadius, 20, 20);
-    const droneMaterial = new THREE.MeshBasicMaterial({color: new THREE.Color("#ffffff")});
+    const droneMaterial = new THREE.MeshStandardMaterial({
+        color: new THREE.Color("#ffffff"),
+        emissive: new THREE.Color("#ffffff"),
+        emissiveIntensity: 0.1
+    });
     const rotationAxis = new THREE.Vector3(0, 1, 0);
     const glowMaterial = new THREE.SpriteMaterial({
         map: createGlowTexture(),
         color: new THREE.Color("#ffffff"),
         transparent: true,
+        opacity: 1,
         blending: THREE.AdditiveBlending,
-        depthWrite: false
+        depthWrite: false,
+        depthTest: false
     });
     const drones = [];
     const baseTargets = [];
@@ -47,9 +53,9 @@ export function createDroneFleet(scene, droneCount) {
 
         const glow = new THREE.Sprite(glowMaterial.clone());
         glow.position.copy(drone.position);
-        glow.scale.set(35, 35, 35);
+        glow.scale.set(60, 60, 60);
 
-        const glowLight = i < maxGlowLights ? new THREE.PointLight(new THREE.Color("#ffffff"), 0.18, 1.8) : null;
+        const glowLight = i < maxGlowLights ? new THREE.PointLight(new THREE.Color("#ffffff"), 5, 2000) : null;
 
         if (glowLight) {
             glowLight.position.copy(drone.position);
@@ -115,6 +121,9 @@ export function createDroneFleet(scene, droneCount) {
         },
         setBeatSync(enabled) {
             beatSyncEnabled = enabled;
+            if (!enabled) {
+                updateDroneColors();
+            }
         },
         update(delta) {
             totalTime += delta;
@@ -144,9 +153,9 @@ export function createDroneFleet(scene, droneCount) {
 
                     const hsl = { h: 0, s: 0, l: 0 };
                     selectedColor.getHSL(hsl);
-                    const newHue = (hsl.h + mid * 0.08 - treble * 0.12 + 1) % 1;
-                    const newSaturation = Math.min(1, hsl.s + bass * 0.3);
-                    const newLightness = Math.min(1, hsl.l + bass * 0.25);
+                    const newHue = (hsl.h + mid * 0.03 - treble * 0.05 + 1) % 1;
+                    const newSaturation = Math.min(1, hsl.s + bass * 0.6);
+                    const newLightness = Math.min(1, hsl.l + bass * 0.05);
                     const reactiveColour = new THREE.Color().setHSL(newHue, newSaturation, newLightness);
 
                     for (let i = 0; i < droneCount; i++) {
@@ -159,20 +168,20 @@ export function createDroneFleet(scene, droneCount) {
                         } else if (currentFormation === "mobius") {
                             formationTargets[i].copy(getMobiusPosition(i, droneCount, totalTime));
                         }
-                        baseTargets[i].lerp(formationTargets[i], 0.25);
+                        baseTargets[i].lerp(formationTargets[i], 0.3);
                     }
 
                     if (bass > 0.6) {
                         for (let i = 0; i < droneCount; i++) {
                             const base = baseTargets[i]
-                            const burstStrength = (bass - 0.4) * 1.2;
+                            const burstStrength = (bass - 0.4) * 50;
                             const outward = new THREE.Vector3(base.x, (base.y * 0.3), base.z).normalize();
                             base.x += outward.x * burstStrength;
                             base.y += outward.y * burstStrength;
                             base.z += outward.z * burstStrength;
                         }
                     }
-                    pulse = 1 + (bass * bass) * 2;
+                    pulse = 1 + (bass * bass) * 0.5;
                 } else if (breathingEnabled === true) {
                     const breathingSpeed = 3;
                     const breathingExpanding = 0.3;
@@ -191,7 +200,9 @@ export function createDroneFleet(scene, droneCount) {
                 }
 
                 currentDrone.drone.position.copy(displayPosition);
-                currentDrone.glow.scale.set(pulse, pulse, pulse);
+                currentDrone.drone.material.emissiveIntensity = 0.1;
+                const glowSize = Math.min(80, 60 * pulse);
+                currentDrone.glow.scale.set(glowSize, glowSize, glowSize);
                 currentDrone.glow.position.copy(currentDrone.drone.position);
 
                 if (currentDrone.glowLight) {
