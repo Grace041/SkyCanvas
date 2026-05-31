@@ -10,11 +10,13 @@ export function createCustomShapeControls({droneFleet, isCustomActive, onCustomS
     const clearShapeButton = document.querySelector("#clear-shape");
     const savedShapeNameInput = document.querySelector("#saved-shape-name");
     const saveShapeButton = document.querySelector("#save-shape");
+    const deleteShapeButton = document.querySelector("#delete-shape");
     const customShapeButtons = document.querySelector("#custom-shape-buttons");
     const shapeContext = shapeCanvas.getContext("2d");
     const shapePoints = [];
     let shapeDroneCount = 160;
     let isDrawingShape = false;
+    let selectedSavedShapeId = null;
     const savedShapes = loadSavedShapes();
 
     shapeCanvas.addEventListener("pointerdown", (event) => {
@@ -66,6 +68,7 @@ export function createCustomShapeControls({droneFleet, isCustomActive, onCustomS
     });
 
     saveShapeButton.addEventListener("click", saveCustomShape);
+    deleteShapeButton.addEventListener("click", deleteSelectedCustomShape);
 
     shapeDroneCountValue.textContent = shapeDroneCount;
     shapeDroneCountInput.value = shapeDroneCount;
@@ -137,15 +140,19 @@ export function createCustomShapeControls({droneFleet, isCustomActive, onCustomS
         };
 
         savedShapes.push(savedShape);
+        selectedSavedShapeId = savedShape.id;
         persistSavedShapes();
         renderSavedShapeButtons(savedShape.id);
         savedShapeNameInput.value = "";
+        updateActionStates();
     }
 
     function startNewCustomShape() {
+        selectedSavedShapeId = null;
         shapePoints.length = 0;
         savedShapeNameInput.value = "";
         shapePanel.hidden = false;
+        renderSavedShapeButtons();
         drawShapeCanvas();
         updateActionStates();
 
@@ -162,6 +169,7 @@ export function createCustomShapeControls({droneFleet, isCustomActive, onCustomS
             return;
         }
 
+        selectedSavedShapeId = savedShapeId;
         shapePoints.length = 0;
         shapePoints.push(...selectedShape.points.map((point) => ({x: point.x, y: point.y})));
         shapeDroneCount = selectedShape.droneCount || shapeDroneCount;
@@ -180,6 +188,33 @@ export function createCustomShapeControls({droneFleet, isCustomActive, onCustomS
         drawShapeCanvas();
         updateActionStates();
         applyToFleet();
+    }
+
+    function deleteSelectedCustomShape() {
+        if (!selectedSavedShapeId) {
+            return;
+        }
+
+        const selectedShapeIndex = savedShapes.findIndex((shape) => shape.id === selectedSavedShapeId);
+
+        if (selectedShapeIndex === -1) {
+            selectedSavedShapeId = null;
+            updateActionStates();
+            return;
+        }
+
+        savedShapes.splice(selectedShapeIndex, 1);
+        selectedSavedShapeId = null;
+        shapePoints.length = 0;
+        savedShapeNameInput.value = "";
+        persistSavedShapes();
+        renderSavedShapeButtons();
+        drawShapeCanvas();
+        updateActionStates();
+
+        if (isCustomActive()) {
+            droneFleet.setFormation("idle");
+        }
     }
 
     function getSavedShapeName() {
@@ -213,6 +248,7 @@ export function createCustomShapeControls({droneFleet, isCustomActive, onCustomS
     }
 
     function renderSavedShapeButtons(activeShapeId) {
+        selectedSavedShapeId = activeShapeId || selectedSavedShapeId;
         customShapeButtons.replaceChildren();
 
         if (savedShapes.length === 0) {
@@ -256,6 +292,7 @@ export function createCustomShapeControls({droneFleet, isCustomActive, onCustomS
 
     function updateActionStates() {
         saveShapeButton.disabled = shapePoints.length < 3;
+        deleteShapeButton.disabled = !selectedSavedShapeId;
     }
 
     function drawShapeCanvas() {

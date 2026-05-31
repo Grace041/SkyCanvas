@@ -201,7 +201,7 @@ export function createDroneFleet(scene, droneCount) {
 
                 currentDrone.drone.position.copy(displayPosition);
                 currentDrone.drone.material.emissiveIntensity = 0.1;
-                const glowSize = Math.min(45, 40 * pulse);
+                const glowSize = Math.min(60, 45 * pulse);
                 currentDrone.glow.scale.set(glowSize, glowSize, glowSize);
                 currentDrone.glow.position.copy(currentDrone.drone.position);
 
